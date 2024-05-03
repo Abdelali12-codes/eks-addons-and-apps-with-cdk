@@ -14,6 +14,27 @@ def eks_node_role(self):
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKS_CNI_Policy"))
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"))
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
+        policy = iam.Policy(self, f"lambda-policy-{id}", 
+                            statements=[
+                                iam.PolicyStatement(
+                                    actions=[
+                                            "route53:ChangeResourceRecordSets",
+                                            "route53:ListResourceRecordSets"
+                                    ],
+                                    resources=['*'],
+                                    effect=iam.Effect.ALLOW
+                                ),
+                                iam.PolicyStatement(
+                                        effect= iam.Effect.ALLOW,
+                                        actions=[
+                                                "route53:ChangeResourceRecordSets",
+                                                "route53:ListResourceRecordSets"
+                                        ],
+                                        resources=["arn:aws:route53:::change/*"]
+                                )
+                            ]
+                        )
+        policy.attach_to_role(iam_role)
         return iam_role
     
 def eks_master_role(self):

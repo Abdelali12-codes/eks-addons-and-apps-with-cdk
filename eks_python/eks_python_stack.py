@@ -9,9 +9,8 @@ from constructs import Construct
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 from .policies.main import *
 from .resources import *
-from .addons  import EksAuth, AlbIngress, FargateProfile, ExternalSecret, ArgocdApp
-from .applications.main import Applications
-from .resources.custom_resources_cdk.essecret.create_es_secret import CreateEsSecret
+from .addons  import EksAuth
+
 
 class EksPythonStack(Stack):
 
@@ -36,55 +35,19 @@ class EksPythonStack(Stack):
               kubectl_layer=KubectlV27Layer(self, "layer")
             )
         
+        
        
-        # # Fargate Profile
-        eksprofile = FargateProfile(self, "fargateprofiles", 
-                       cluster=cluster, 
-                       vpc=vpc.vpc, 
-                       namespaces=["microservices","default","kube-system", "external-secret", "argocd"]
-                    )
+        cluster.add_nodegroup_capacity("eksnodegroupcapacity",
+            min_size=1,
+            desired_size=2,
+            max_size=3,
+            node_role= node_role,
+            subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            instance_types= [ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM)]
+        )
+
         
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
 
-        # # cloudfront
-        Cloudfront(self,"cloudfronts3")
-        
-
-        # Argocd App
-        #argocd = ArgocdApp(self, "argocdapp", cluster=cluster)
-
-        # # rds instance
-        db = RdsDatabase(self, "rdsinstance", vpc = vpc.vpc)
-
-        # # es 
-        essecret = CreateEsSecret(self, "EsScret", username=opensearch['es_username'], secretname=opensearch["secretname"])
-        es = Opensearch(self, "opensearchinstance", vpc = vpc)
-        es.node.add_dependency(essecret)
-
-        # # # dynamodb
-        # DynamodbTable(self,"apptables")
-        
-        # # # api gateway and socket
-        # ApiGateway(self, 'apigateways')
-        
-        # external secret
-        externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
-        #externalsecret.node.add_dependency(essecret)
-
-        # # ALB Ingress
-        ingress = AlbIngress(self, "eksalbingress", cluster=cluster, vpc=vpc.vpc)
-        
-        # # # Deploy Apps 
-        # Applications(self, "applications", 
-        #              externalsecret=externalsecret, 
-        #              db_secret= db.dbsecret,
-        #              db_host=db.rds_endpoint,
-        #              es_domain=es.domain_endpoint,
-        #              cognito_domain="cognito.domain_name",
-        #              cluster= cluster,
-        #              vpc = vpc,
-        #              ingress = ingress,
-        #              eksprofile=eksprofile
-        #             )
         

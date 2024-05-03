@@ -19,7 +19,7 @@ class ArgocdApp(Resource):
                       namespace= "argocd",
                       repository="https://argoproj.github.io/argo-helm",
                       release="argocd",
-                      wait=True,
+                      wait=False,
                       chart="argo-cd",
                       values= {
                           "server": {
