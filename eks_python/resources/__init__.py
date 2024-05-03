@@ -4,3 +4,7 @@ from .rdsdatabase import *
 from .opensearch import *
 from .cognito import *
 from .vpc import *
+from .dynamodb import *
+from .sqs import *
+from .sns import *
+from .apigateway import *
