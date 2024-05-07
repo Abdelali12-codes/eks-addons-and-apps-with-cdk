@@ -1,6 +1,6 @@
 from aws_cdk import (Resource, CfnDynamicReference,Fn, Stack, CfnDynamicReferenceService)
 from jinja2 import Environment, FileSystemLoader
-from ..policies.main import eks_node_role, ExternalDnsRole, CertManagerRole
+from ..policies.main import CertManagerRole
 import os
 import json
 import glob

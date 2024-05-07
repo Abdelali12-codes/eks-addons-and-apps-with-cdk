@@ -161,7 +161,7 @@ def ExternalDnsRole(self, cluster):
         conditions = CfnJson(self, 'ConditionJson',
           value = {
             "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",            # namespace # serviceaccountname
-            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("cert-manager","cert-manager"),
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("default","external-dns"),
           },
         )
 

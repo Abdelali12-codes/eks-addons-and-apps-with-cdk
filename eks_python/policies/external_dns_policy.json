@@ -28,15 +28,6 @@
         "Resource": [
           "arn:aws:route53:::change/*"
         ]
-      },
-      {
-        "Effect":"Allow",
-        "Action":[
-          "sts:AssumeRole"
-        ],
-        "Resource":[
-          "*"
-        ]
       }
     ]
   }

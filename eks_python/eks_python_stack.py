@@ -10,7 +10,7 @@ from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 from .policies.main import *
 from .resources import *
 from .application.main import Applications
-from .addons  import EksAuth, IngressNginx, CertManagerAddon
+from .addons  import EksAuth, IngressNginx, CertManagerAddon, ExternalDns
 
 
 class EksPythonStack(Stack):
@@ -56,6 +56,9 @@ class EksPythonStack(Stack):
 
         # cert manager
         certmanger = CertManagerAddon(self, "certmanager", cluster=cluster)
+
+        # external dns
+        ExternalDns(self, "externaldns", cluster=cluster)
 
         # Applications
 
