@@ -2,7 +2,7 @@ from aws_cdk import (Resource)
 import aws_cdk.aws_eks as eks
 
 
-class CertManagerAddon(Resource):
+class IngressNginx(Resource):
     def __init__(self, scope, id , **kwargs):
         super().__init__(scope, id)
         
@@ -21,9 +21,14 @@ class CertManagerAddon(Resource):
                       wait=False,
                       chart="ingress-nginx",
                       values= {
-                          "service":{
-                              "annotations": {
-                                    "service.beta.kubernetes.io/aws-load-balancer-type": "nlb"
+                          "controller":{
+                              "ingressClassResource": {
+                                  "name": "ingress-nginx"
+                              },
+                              "service":{
+                                "annotations": {
+                                                "service.beta.kubernetes.io/aws-load-balancer-type": "nlb"
+                                        }
                               }
                           }
                       }

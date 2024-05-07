@@ -9,7 +9,7 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 
 def eks_node_role(self):
         
-        iam_role = iam.Role(self, "noderole", assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"))
+        iam_role = iam.Role(self, "noderole", assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"), role_name="eks-worker-node-role")
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKSWorkerNodePolicy"))
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKS_CNI_Policy"))
         iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"))
@@ -18,8 +18,7 @@ def eks_node_role(self):
                             statements=[
                                 iam.PolicyStatement(
                                     actions=[
-                                            "route53:ChangeResourceRecordSets",
-                                            "route53:ListResourceRecordSets"
+                                            "route53:ListHostedZonesByName"
                                     ],
                                     resources=['*'],
                                     effect=iam.Effect.ALLOW
@@ -30,7 +29,16 @@ def eks_node_role(self):
                                                 "route53:ChangeResourceRecordSets",
                                                 "route53:ListResourceRecordSets"
                                         ],
-                                        resources=["arn:aws:route53:::change/*"]
+                                        resources=["arn:aws:route53:::hostedzone/*"]
+                                ),
+                                iam.PolicyStatement(
+                                        actions= [
+                                                "route53:GetChange"
+                                        ],
+                                        effect=iam.Effect.ALLOW,
+                                        resources=[
+                                                "arn:aws:route53:::change/*"
+                                        ]
                                 )
                             ]
                         )
@@ -149,3 +157,44 @@ def lambdaRole(self, id):
         policy.attach_to_role(lambda_role)
 
         return lambda_role
+def ExternalDnsRole(self, cluster):
+        conditions = CfnJson(self, 'ConditionJson',
+          value = {
+            "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",            # namespace # serviceaccountname
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("cert-manager","cert-manager"),
+          },
+        )
+
+        role =  iam.Role(self, "ExternalDnsRole",
+                          assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                                     .with_conditions({
+                                        "StringEquals": conditions,
+                                     }),
+                                role_name="external-dns-role"
+                        )
+        statements = []
+        with open(os.path.join(DIR, 'external_dns_policy.json'), 'r') as f:
+                data = json.load(f)
+                for s in data['Statement']:
+                    statements.append(iam.PolicyStatement.from_json(s))
+
+        policy = iam.Policy(self, "externaldnspolicy",statements=statements, policy_name="externaldnspolicy")
+
+        policy.attach_to_role(role)
+        return role
+
+def CertManagerRole(self, cluster, noderole):
+        
+        statements = []
+        with open(os.path.join(DIR, 'external_dns_policy.json'), 'r') as f:
+                data = json.load(f)
+                for s in data['Statement']:
+                    statements.append(iam.PolicyStatement.from_json(s))
+
+        policy = iam.Policy(self, "externaldnspolicy",statements=statements, policy_name="externaldnspolicy")
+
+        certmanagerrole = iam.Role(self, "certmanagerrole", 
+                                   assumed_by=iam.ArnPrincipal(noderole.role_arn), role_name="certmanagerrole")
+        
+        policy.attach_to_role(certmanagerrole)
+        return certmanagerrole

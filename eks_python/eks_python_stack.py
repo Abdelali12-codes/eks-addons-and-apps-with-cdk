@@ -9,7 +9,8 @@ from constructs import Construct
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 from .policies.main import *
 from .resources import *
-from .addons  import EksAuth
+from .application.main import Applications
+from .addons  import EksAuth, IngressNginx, CertManagerAddon
 
 
 class EksPythonStack(Stack):
@@ -50,4 +51,14 @@ class EksPythonStack(Stack):
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
 
+        # ingress nginx
+        IngressNginx(self, "ingressnginx", cluster=cluster)
+
+        # cert manager
+        certmanger = CertManagerAddon(self, "certmanager", cluster=cluster)
+
+        # Applications
+
+        applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role)
+        applications.node.add_dependency(certmanger)
         
