@@ -4,6 +4,7 @@ import os
 import yaml
 from cdk_ecr_deployment import DockerImageName, ECRDeployment
 from ..policies.main import ExternalDnsRole
+from ..configuration.config import *
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -26,8 +27,8 @@ class ExternalDns(Resource):
         role = ExternalDnsRole(self, cluster)
 
         rendered_template = template.render({
-            'domain': "abdelalitraining.com",
-            'hostedzoneid': "Z05045244G4M5OFGHB4C",
+            'domain': clusterissuer['hostedZoneName'],
+            'hostedzoneid': clusterissuer['hostedZoneID'],
             'role_arn': role.role_arn,
         })
         
