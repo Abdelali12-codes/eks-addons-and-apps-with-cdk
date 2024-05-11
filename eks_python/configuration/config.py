@@ -23,12 +23,28 @@ vpc  = {
     "max_azs": 2,
  }
 
+rdsdb = {
+   "instance_identifier":"rds-microservice",
+   "secretname": "rdssecret",
+   "allocated_storage": 40,
+   "subnet_group_name": "rdsgroupname",
+   "database_name": "microservice",
+   "db_username": "abdelali",
+   "instance_type": ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM)
+}
+
 argocd = {
     "hostname": "argocd.abdelalitraining.com"
 }
-gitlabapplication = {
-    "clientid": "xxxxxxxxxxxxxxxxx",
-    "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxx"
+dexapplications = {
+    "github":{
+      "clientid": "xxxxxxxxxxxxxxxxxx",
+      "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "gitlab": {
+      "clientid": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
 }
 
 clusterissuer = {

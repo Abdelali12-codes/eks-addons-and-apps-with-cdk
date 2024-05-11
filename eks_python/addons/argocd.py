@@ -13,7 +13,10 @@ class ArgocdApp(Resource):
         else:
             raise Exception("you should provide the cluster arg")
         
+        dexconf = ''
 
+        for key in dexapplications.keys():
+            dexconf = dexconf + f"- type: {key}\n  id: {key}\n  name: {key.capitalize()}\n  config:\n    baseURL: {"https://gitlab.com" if key.lower() == 'gitlab' else 'https://github.com'}\n    clientID: {dexapplications[key]['clientid']}\n    clientSecret: {dexapplications[key]['clientsecret']}\n    redirectURI: http://argocd-dex-server:5556/dex/callback\n"
         
         eks.HelmChart(self, "argocdchart",
                       cluster= cluster,
@@ -40,7 +43,7 @@ class ArgocdApp(Resource):
                           },
                           "configs":{
                               "cm":{
-                                  "dex.config": f"connectors:\n- type: gitlab\n  id: gitlab\n  name: GitLab\n  config:\n    baseURL: https://gitlab.com\n    clientID: {gitlabapplication['clientid']}\n    clientSecret: {gitlabapplication['clientsecret']}\n    redirectURI: http://argocd-dex-server:5556/dex/callback"
+                                  "dex.config": "connectors:\n"+dexconf
                                 }
                               }
                           }

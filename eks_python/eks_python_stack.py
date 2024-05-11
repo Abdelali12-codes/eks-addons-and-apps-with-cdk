@@ -10,7 +10,7 @@ from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 from .policies.main import *
 from .resources import *
 from .application.main import Applications
-from .addons  import EksAuth, IngressNginx, CertManagerAddon, ExternalDns, ArgocdApp
+from .addons  import EksAuth, IngressNginx, CertManagerAddon, ExternalDns, ArgocdApp, ExternalSecret
 
 
 class EksPythonStack(Stack):
@@ -46,7 +46,9 @@ class EksPythonStack(Stack):
             subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             instance_types= [ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM)]
         )
+        # rds 
 
+        rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
         
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
@@ -61,9 +63,14 @@ class EksPythonStack(Stack):
 
         # external dns
         ExternalDns(self, "externaldns", cluster=cluster)
+        
+        # external secret
+        externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
 
         # Applications
 
-        applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role)
+        applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
         applications.node.add_dependency(certmanger)
+        applications.node.add_dependency(externalsecret)
+
         
