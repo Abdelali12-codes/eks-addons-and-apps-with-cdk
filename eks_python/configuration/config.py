@@ -23,3 +23,16 @@ vpc  = {
     "max_azs": 2,
  }
 
+argocd = {
+    "hostname": "argocd.abdelalitraining.com"
+}
+gitlabapplication = {
+    "clientid": "xxxxxxxxxxxxxxxxx",
+    "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxx"
+}
+
+clusterissuer = {
+    "email": "jadelmoulaa2@gmail.com", # change it to yours
+    "hostedZoneName": "abdelalitraining.com", # change it to yours
+    "hostedZoneID": "Z05045244G4M5OFGHB4C", # change it to yours
+}

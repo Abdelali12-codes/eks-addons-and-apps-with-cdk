@@ -10,7 +10,7 @@ from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 from .policies.main import *
 from .resources import *
 from .application.main import Applications
-from .addons  import EksAuth, IngressNginx, CertManagerAddon, ExternalDns
+from .addons  import EksAuth, IngressNginx, CertManagerAddon, ExternalDns, ArgocdApp
 
 
 class EksPythonStack(Stack):
@@ -50,7 +50,9 @@ class EksPythonStack(Stack):
         
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
-
+         
+        # argocd
+        ArgocdApp(self, "argocdapp", cluster=cluster)
         # ingress nginx
         IngressNginx(self, "ingressnginx", cluster=cluster)
 

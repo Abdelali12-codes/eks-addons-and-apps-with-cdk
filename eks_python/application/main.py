@@ -5,6 +5,7 @@ import os
 import json
 import glob
 import yaml
+from ..configuration.config import *
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -28,9 +29,9 @@ class Applications(Resource):
                 env = Environment(loader=FileSystemLoader(DIR))
                 template = env.get_template('cluster_issuer.yaml.j2')
                 rendered_template = template.render({
-                    "email": "jadelmoulaa2@gmail.com",
-                    "hostedZoneName": "abdelalitraining.com",
-                    "hostedZoneID": "Z05045244G4M5OFGHB4C",
+                    "email": clusterissuer['email'],
+                    "hostedZoneName": clusterissuer['hostedZoneName'],
+                    "hostedZoneID": clusterissuer['hostedZoneID'],
                     "rolearn": certmanager.role_arn
                 })
 

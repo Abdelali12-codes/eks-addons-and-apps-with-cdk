@@ -1,5 +1,6 @@
 from aws_cdk import (Resource)
 import aws_cdk.aws_eks as eks
+from ..configuration.config import *
 
 
 class ArgocdApp(Resource):
@@ -22,12 +23,28 @@ class ArgocdApp(Resource):
                       wait=False,
                       chart="argo-cd",
                       values= {
+                          "global":{
+                              "domain": argocd['hostname']
+                          },
                           "server": {
-                           "service": {
-                               "type": "LoadBalancer"
-                           }   
+                           "ingress":{
+                               "enabled": "true",
+                               "ingressClassName": "ingress-nginx",
+                               "annotations": {
+                                   "cert-manager.io/cluster-issuer": "dns-01-production",
+                                   "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
+                               },
+                               "tls": "true",
+                               "hostname": argocd['hostname']
+                            }
+                          },
+                          "configs":{
+                              "cm":{
+                                  "dex.config": f"connectors:\n- type: gitlab\n  id: gitlab\n  name: GitLab\n  config:\n    baseURL: https://gitlab.com\n    clientID: {gitlabapplication['clientid']}\n    clientSecret: {gitlabapplication['clientsecret']}\n    redirectURI: http://argocd-dex-server:5556/dex/callback"
+                                }
+                              }
                           }
-                      }
+                      
                     )
         
        

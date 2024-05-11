@@ -27,9 +27,6 @@ class CertManagerAddon(Resource):
                           "installCRDs": "true",
                           "serviceAccount":{
                               "name": "cert-manager",
-                            #   "annotations": {
-                            #       "eks.amazonaws.com/role-arn": externaldnsiamrole.role_arn
-                            #   }
                           }
                       }
                     )
