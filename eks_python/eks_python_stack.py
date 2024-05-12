@@ -18,8 +18,6 @@ class EksPythonStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-       
-
         vpc = Vpc(self,construct_id)
         master_role = eks_master_role(self)
         node_role = eks_node_role(self)
@@ -36,8 +34,6 @@ class EksPythonStack(Stack):
               kubectl_layer=KubectlV27Layer(self, "layer")
             )
         
-        
-       
         cluster.add_nodegroup_capacity("eksnodegroupcapacity",
             min_size=1,
             desired_size=2,
@@ -69,8 +65,8 @@ class EksPythonStack(Stack):
 
         # Applications
 
-        applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
-        applications.node.add_dependency(certmanger)
-        applications.node.add_dependency(externalsecret)
+        # applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
+        # applications.node.add_dependency(certmanger)
+        # applications.node.add_dependency(externalsecret)
 
         

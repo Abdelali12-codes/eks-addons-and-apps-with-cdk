@@ -1,34 +1,48 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: my-project
+  name: argocdproject
+  namespace: {{ namespace }}
 spec:
   destinations:
   - namespace: default
     server: https://kubernetes.default.svc
   sourceRepos:
-  - 'https://github.com/yourusername/your-repo'
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+  - '*'
 --- 
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: my-application
-  namespace: default
+  name: argocdapplication
+  namespace: {{ namespace }}
 spec:
-  project: my-project
+  project: argocdproject
   source:
-    repoURL: 'https://github.com/yourusername/your-repo'
+    repoURL: {{ git_repo_url }}
     targetRevision: HEAD
-    path: path/to/application
+    path: .
   destination:
     server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      allowEmpty: true
+
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: private-repo
+  namespace: {{ namespace }}
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+data:
+  type: {{ type }}
+  url: {{ repo_url }}
+  sshPrivateKey: |
+      {{ privatekey }}

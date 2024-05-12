@@ -34,7 +34,8 @@ rdsdb = {
 }
 
 argocd = {
-    "hostname": "argocd.abdelalitraining.com"
+    "hostname": "argocd.abdelalitraining.com",
+    "manifestrepo": "git@github.com:Abdelali12-codes/flask-app-k8s-manifests-gitops.git"
 }
 dexapplications = {
     "github":{
