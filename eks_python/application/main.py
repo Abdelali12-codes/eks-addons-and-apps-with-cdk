@@ -11,11 +11,10 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class Applications(Resource):
-    def __init__(self, scope, id,  cluster, noderole, db,**kwargs):
+    def __init__(self, scope, id,  cluster,  db,**kwargs):
         super().__init__(scope, id)
         count = 0
 
-        certmanager = CertManagerRole(self, cluster, noderole)
         for item in glob.glob(os.path.join(DIR, '*.yaml')):
             file = os.path.basename(item)
             with open(os.path.join(DIR, file)) as content:
@@ -121,21 +120,4 @@ class Applications(Resource):
                         })
                     cluster.add_manifest(f'{manifest['metadata']['name']}-{manifest['kind']}', manifest)
                 
-                # deploy ingress for application
                 
-                env = Environment(loader=FileSystemLoader(DIR))
-                template = env.get_template('cluster_issuer.yaml.j2')
-                rendered_template = template.render({
-                    "email": clusterissuer['email'],
-                    "hostedZoneName": clusterissuer['hostedZoneName'],
-                    "hostedZoneID": clusterissuer['hostedZoneID'],
-                    "rolearn": certmanager.role_arn
-                })
-
-                manifest = yaml.safe_load(rendered_template)
-                cluster.add_manifest('cluster-issuer', manifest)
-
-                
-
-        
-        

@@ -1,0 +1,169 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: keycloak-admin-sm
+  namespace: default
+spec:
+  data:
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: {{ keycloaksecret }}
+      metadataPolicy: None
+      property: username
+    secretKey: KEYCLOAK_ADMIN
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: {{ keycloaksecret }}
+      metadataPolicy: None
+      property: password
+    secretKey: KEYCLOAK_ADMIN_PASSWORD
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: aws-secrets-manager
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: keycloak-admin-sm
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: keycloak-sm
+  namespace: default
+spec:
+  data:
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: {{ rdssecret }}
+      metadataPolicy: None
+      property: username
+    secretKey: DB_USERNAME
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: {{ rdssecret }}
+      metadataPolicy: None
+      property: password
+    secretKey: DB_PASSWORD
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: aws-secrets-manager
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: keycloak-sm
+--- 
+# using ssm
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: keycloak-ssm
+  namespace: default
+spec:
+  data:
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: {{ dbendpointssm }}
+      metadataPolicy: None
+    secretKey: DB_HOST
+  - remoteRef:
+      conversionStrategy: Default
+      decodingStrategy: None #Auto
+      key: {{ dbnamessm }}
+      metadataPolicy: None
+    secretKey: DB_ADDR
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: aws-parameter-store
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: keycloak-ssm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: keycloak
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:20.0.3
+        args: ["start-dev"]
+        envFrom:
+          - secretRef:
+              name: keycloak-sm
+          - secretRef:
+              name: keycloak-admin-sm
+          - secretRef:
+              name: keycloak-ssm
+        env:
+        - name: DB_VENDOR
+          value: mysql
+        - name: KC_PROXY
+          value: "edge"
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: dns-01-production
+spec:
+  ingressClassName: ingress-nginx
+  rules:
+    - host: keycloak.abdelalitraining.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - keycloak.abdelalitraining.com
+      secretName: keycloak-abdelalitraining-com

@@ -198,3 +198,99 @@ def CertManagerRole(self, cluster, noderole):
         
         policy.attach_to_role(certmanagerrole)
         return certmanagerrole
+
+def S3DriverMountServicea(self, cluster):
+        conditions = CfnJson(self, 'ConditionJson',
+          value = {
+            "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",            # namespace # serviceaccountname
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("kube-system","s3-csi-driver-sa"),
+          },
+         )
+
+        role =  iam.Role(self, "S3DriverMountRole",
+                          assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                                     .with_conditions({
+                                        "StringEquals": conditions,
+                                     }),
+                                role_name="S3DriverMountRole"
+                        )
+        
+        policy = iam.Policy(self, "s3driverpolicy",
+                             statements=[
+                                     iam.PolicyStatement(
+                                             actions= [
+                                                 "s3:ListBucket"
+                                             ],
+                                             resources=["*"],
+                                             effect=iam.Effect.ALLOW
+                                     ),
+                                     iam.PolicyStatement(
+                                             actions=[
+                                                "s3:GetObject",
+                                                "s3:PutObject",
+                                                "s3:AbortMultipartUpload",
+                                                "s3:DeleteObject"
+                                             ],
+                                             resources=["*"],
+                                             effect=iam.Effect.ALLOW
+
+                                     )
+                             ])
+        
+        policy.attach_to_role(role)
+        
+        servicea = eks.ServiceAccount(self, 's3-csi-driver-sa',
+                           cluster=cluster,
+                           name="s3-csi-driver-sa",
+                           labels= {
+                                "app.kubernetes.io/name": "s3-csi-driver-sa",
+                                "app.kubernetes.io/managed-by": "Helm",
+                           },
+                           annotations= {
+                                "eks.amazonaws.com/role-arn": role.role_arn,
+                                "meta.helm.sh/release-name": "aws-mountpoint-s3-csi-driver", 
+                                "meta.helm.sh/release-namespace": "kube-system", 
+                           },
+                           namespace="kube-system"
+                        )
+        
+def EbsDriverServicea(self, cluster):
+        conditions = CfnJson(self, 'ConditionJson',
+          value = {
+            "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",            # namespace # serviceaccountname
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("kube-system","ebs-csi-controller-sa"),
+          },
+         )
+
+        role =  iam.Role(self, "EbsDriverRole",
+                          assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                                     .with_conditions({
+                                        "StringEquals": conditions,
+                                     }),
+                                role_name="ebsdriverrole"
+                        )
+        
+        statements = []
+        with open(os.path.join(DIR, 'ebs_policy.json'), 'r') as f:
+                data = json.load(f)
+                for s in data['Statement']:
+                    statements.append(iam.PolicyStatement.from_json(s))
+
+        policy = iam.Policy(self, "ebsdriver",statements=statements, policy_name="ebsdriverpolicy")
+        
+        policy.attach_to_role(role)
+        
+        servicea = eks.ServiceAccount(self, 's3-csi-driver-sa',
+                           cluster=cluster,
+                           name="ebs-csi-controller-sa",
+                           labels= {
+                                "app.kubernetes.io/name": "ebs-csi-controller-sa",
+                                "app.kubernetes.io/managed-by": "Helm",
+                           },
+                           annotations= {
+                                "eks.amazonaws.com/role-arn": role.role_arn,
+                                "meta.helm.sh/release-name": "aws-ebs-csi-driver", 
+                                "meta.helm.sh/release-namespace": "kube-system", 
+                           },
+                           namespace="kube-system"
+                        )

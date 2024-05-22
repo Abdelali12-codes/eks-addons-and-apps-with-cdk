@@ -65,15 +65,18 @@ class RdsDatabase(Resource):
             )
         
         self.rds_endpoint = db_rds.db_instance_endpoint_address
-        ssm.StringParameter(self, "rdsdbendpoint",
+        self.ssmdata = {}
+        self.ssmdata['endpoint'] = ssm.StringParameter(self, "rdsdbendpoint",
                           parameter_name="/db/endpoint",
                           string_value=db_rds.db_instance_endpoint_address
                         )
         
-        ssm.StringParameter(self, "rdsdbname",
+        self.ssmdata['dbname'] = ssm.StringParameter(self, "rdsdbname",
                             parameter_name="/db/dbname",
                             string_value=rdsdb['database_name']
                         )
+        
+        
 
 
 
