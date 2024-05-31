@@ -17,9 +17,8 @@ class Vpc(Resource):
                       enable_dns_hostnames= True,
                       enable_dns_support=True,
                       max_azs=vpc['max_azs'],
-                      subnet_configuration=vpc['subnet_configuration']
+                      subnet_configuration=vpc['subnet_configuration'],
             )
-        
        
         self.private_subnets = [subnet.subnet_id for subnet in self.vpc.isolated_subnets]
 

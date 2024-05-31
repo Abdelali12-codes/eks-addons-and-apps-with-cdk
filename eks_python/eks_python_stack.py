@@ -46,38 +46,42 @@ class EksPythonStack(Stack):
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
 
-        # keycloak secret 
-        keycloaksecret = KeycloakSecret(self, "keycloak")
+        # karpenter
 
-        # s3 driver
-        S3DriverMount(self, "s3driver", cluster=cluster)
+        EksKarpenter(self, "ekskarpenter", cluster=cluster, namespace="karpenter")
 
-        # ebs driver 
-        EbsDriver(self, "ebsdriver", cluster=cluster)
+        # # keycloak secret 
+        # keycloaksecret = KeycloakSecret(self, "keycloak")
 
-        # rds 
-        rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
+        # # s3 driver
+        # S3DriverMount(self, "s3driver", cluster=cluster)
 
-        # argocd
-        # ArgocdApp(self, "argocdapp", cluster=cluster)
+        # # ebs driver 
+        # EbsDriver(self, "ebsdriver", cluster=cluster)
 
-        # ingress nginx
-        IngressNginx(self, "ingressnginx", cluster=cluster)
+        # # rds 
+        # rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
 
-        # cert manager
-        certmanger = CertManagerAddon(self, "certmanager", cluster=cluster , noderole=node_role)
+        # # argocd
+        # # ArgocdApp(self, "argocdapp", cluster=cluster)
 
-        # external dns
-        ExternalDns(self, "externaldns", cluster=cluster)
+        # # ingress nginx
+        # IngressNginx(self, "ingressnginx", cluster=cluster)
+
+        # # cert manager
+        # certmanger = CertManagerAddon(self, "certmanager", cluster=cluster , noderole=node_role)
+
+        # # external dns
+        # ExternalDns(self, "externaldns", cluster=cluster)
         
-        # external secret
-        externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
+        # # external secret
+        # externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
 
-        # Applications
-        keycloakapp = KeycloakApp(self, "keycloakapp", cluster=cluster, dbsecret= rdsdb, 
-                    keycloaksecret=keycloaksecret, ssmdata= rdsdb.ssmdata)
+        # # Applications
+        # keycloakapp = KeycloakApp(self, "keycloakapp", cluster=cluster, dbsecret= rdsdb, 
+        #             keycloaksecret=keycloaksecret, ssmdata= rdsdb.ssmdata)
         
-        keycloakapp.node.add_dependency(externalsecret)
+        # keycloakapp.node.add_dependency(externalsecret)
         # applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
         # applications.node.add_dependency(certmanger)
         # applications.node.add_dependency(externalsecret)

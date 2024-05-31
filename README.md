@@ -56,3 +56,40 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
+
+## keycloak configuration
+```
+http://<host>:<port>/auth/realms/<realm_name>/.well-known/openid-configuration
+```
+## github and gitlab application redirect url
+```
+https://argocd.abdelalitraining.com/api/dex/callback
+```
+## set up gitlab server on amazon linuxx server
+
+```
+
+
+sudo dnf install -y policycoreutils-python-utils openssh-server openssh-clients perl
+# Check if OpenSSH server daemon is enabled
+sudo systemctl status sshd
+## If OpenSSH server daemon is not enabled, enable it
+sudo systemctl enable sshd
+sudo systemctl start sshd
+
+
+```
+* for smtp server, we will use aws ses
+
+## install package 
+```
+
+curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
+sudo EXTERNAL_URL="https://gitlab.abdelalitraining.com" dnf install gitlab-ee -y
+```
+
+## apply configuration
+```
+sudo gitlab-ctl reconfigure
+```
+

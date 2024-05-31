@@ -1,6 +1,7 @@
 from aws_cdk import CfnJson
 import aws_cdk.aws_iam as iam
 import aws_cdk.aws_eks as eks
+import aws_cdk.aws_sqs as sqs
 import os 
 import json
 
@@ -44,7 +45,71 @@ def eks_node_role(self):
                         )
         policy.attach_to_role(iam_role)
         return iam_role
-    
+
+def karpenter_node_role(self):
+        iam_role = iam.Role(self, "noderole", assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"), role_name="karpenter-worker-node-role")
+        iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKSWorkerNodePolicy"))
+        iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKS_CNI_Policy"))
+        iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"))
+        iam_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")) 
+
+        return iam_role
+
+def karpenter_controller_policy(self, sqsqueue: sqs.Queue, role: iam.Role, karpenternoderole: iam.Role):
+        policy = iam.Policy(self, "karpentercontrollerpolicy",
+                    statements=[
+                           iam.PolicyStatement(
+                                  effect= iam.Effect.ALLOW,
+                                  actions=[
+                                          "ec2:CreateLaunchTemplate",
+                                          "ec2:CreateFleet",
+                                          "ec2:RunInstances",
+                                          "ec2:CreateTags",
+                                          "ec2:TerminateInstances",
+                                          "ec2:DescribeLaunchTemplates",
+                                          "ec2:DescribeInstances",
+                                          "ec2:DescribeSecurityGroups",
+                                          "ec2:DeleteLaunchTemplate",
+                                          "ec2:DescribeSubnets",
+                                          "ec2:DescribeImages",
+                                          "ec2:DescribeInstanceTypes",
+                                          "ec2:DescribeInstanceTypeOfferings",
+                                          "ec2:DescribeAvailabilityZones",
+                                          "ec2:DescribeSpotPriceHistory",
+                                          "pricing:GetProducts",
+                                          "iam:AddRoleToInstanceProfile",
+                                          "iam:RemoveRoleFromInstanceProfile",
+                                          "iam:DeleteInstanceProfile",
+                                          "iam:GetInstanceProfile",
+                                          "iam:CreateInstanceProfile",
+                                          "iam:TagInstanceProfile",
+                                          "eks:DescribeCluster",
+                                          "ssm:GetParameter"
+                                  ],
+                                  resources=["*"]
+                           ),
+                           iam.PolicyStatement(
+                                  effect=iam.Effect.ALLOW,
+                                  actions=[
+                                        'sqs:DeleteMessage',
+                                        'sqs:GetQueueAttributes',
+                                        'sqs:GetQueueUrl',
+                                        'sqs:ReceiveMessage',
+                                  ],
+                                  resources=[sqsqueue.queue_arn]
+                           ),
+                           iam.PolicyStatement(
+                                  effect= iam.Effect.ALLOW,
+                                  actions=[
+                                        "iam:PassRole"
+                                  ],
+                                  resources=[karpenternoderole.role_arn]
+                           )
+                    ]
+               )
+        policy.attach_to_role(role)
+       
+
 def eks_master_role(self):
         
         iam_role = iam.Role(self, "eksrole", assumed_by=iam.ServicePrincipal("eks.amazonaws.com"))
