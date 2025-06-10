@@ -1,0 +1,23 @@
+---
+apiVersion: platform.kratix.io/v1alpha1
+kind: BucketStateStore
+metadata:
+  name: default
+spec:
+  endpoint: kratix-bucket-01-12-2024.us-east-1.amazonaws.com
+  insecure: true
+  bucketName: kratix-bucket-01-12-2024
+  path: destinations/
+  secretRef:
+    name: minio-credentials
+    namespace: default
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-credentials
+  namespace: default
+type: Opaque
+data:
+  accessKeyID: QUtJQVJGTUI2U1VTS1ZWVVJDSlA=
+  secretAccessKey: ZDk5ZWZCcGR0Ym52MlNKQ1lKdEVLeGZyR2VyZ3EranExQmVSNkFmdA==

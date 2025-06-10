@@ -53,3 +53,20 @@ clusterissuer = {
     "hostedZoneName": "abdelalitraining.com", # change it to yours
     "hostedZoneID": "Z05045244G4M5OFGHB4C", # change it to yours
 }
+
+opensearch = {
+    "es_domain_name": "microservice-application",
+    "secretname": "escredential",  # secret that you store your es password
+    "es_username": "esmicroservice",
+    "capacity": {
+        "data_nodes": 2,
+        "data_node_instance_type": "t3.small.search"
+    },
+    "version": "OpenSearch_2.9",
+    "ebs": es.CfnDomain.EBSOptionsProperty(
+        ebs_enabled=True,
+        volume_size=100,
+        volume_type="gp2"
+    )
+
+}

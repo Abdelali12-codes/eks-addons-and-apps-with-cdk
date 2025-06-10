@@ -21,5 +21,6 @@ class Vpc(Resource):
             )
        
         self.private_subnets = [subnet.subnet_id for subnet in self.vpc.isolated_subnets]
+        self.public_subnets  = [subnet.subnet_id for subnet in self.vpc.public_subnets]
 
         

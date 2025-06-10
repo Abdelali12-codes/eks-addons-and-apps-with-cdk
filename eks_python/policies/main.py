@@ -1,4 +1,4 @@
-from aws_cdk import CfnJson
+from aws_cdk import CfnJson, Stack
 import aws_cdk.aws_iam as iam
 import aws_cdk.aws_eks as eks
 import aws_cdk.aws_sqs as sqs
@@ -359,3 +359,80 @@ def EbsDriverServicea(self, cluster):
                            },
                            namespace="kube-system"
                         )
+
+
+def AdotServiceAccount(self, cluster, namespace, serviceaccountname)-> iam.IRole:
+    conditions = CfnJson(self, 'ConditionJson',
+                         value={
+                             "%s:aud" % cluster.cluster_open_id_connect_issuer: "sts.amazonaws.com",
+                             # namespace # serviceaccountname
+                             "%s:sub" % cluster.cluster_open_id_connect_issuer: "system:serviceaccount:%s:%s" % (
+                                 namespace, serviceaccountname),
+                         },
+                         )
+
+    role = iam.Role(self, "adotcollectorRole",
+                    assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                    .with_conditions({
+                        "StringEquals": conditions,
+                    }),
+                    role_name="adot-collector"
+                    )
+    role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name="AmazonPrometheusRemoteWriteAccess"))
+    namespace = eks.KubernetesManifest(
+        self,
+        "opentelemetrycollector",
+        cluster=cluster,
+        manifest=[{
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {"name": namespace}
+        }]
+    )
+    servicea = eks.ServiceAccount(self, 'adot-collector-sa',
+                       cluster=cluster,
+                       name="adot-collector",
+                       labels={
+                           "app.kubernetes.io/name": "adot-collector",
+                           "app.kubernetes.io/managed-by": "Helm",
+                       },
+                       annotations={
+                           "eks.amazonaws.com/role-arn": role.role_arn,
+                           "meta.helm.sh/release-name": "opentelemetry-collector",
+                           "meta.helm.sh/release-namespace": "opentelemetry-collector",
+                       },
+                       namespace="opentelemetry-collector"
+                       )
+    servicea.node.add_dependency(namespace)
+
+def FluentBitSaRole(self, cluster, namespace, serviaccount, esdomain)-> iam.IRole:
+    conditions = CfnJson(self, 'ConditionJson',
+                         value={
+                             "%s:aud" % cluster.cluster_open_id_connect_issuer: "sts.amazonaws.com",
+                             # namespace # serviceaccountname
+                             "%s:sub" % cluster.cluster_open_id_connect_issuer: "system:serviceaccount:%s:%s" % (
+                                 namespace, serviaccount),
+                         },
+                         )
+
+    role = iam.Role(self, "fluentbitrole",
+                    assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                    .with_conditions({
+                        "StringEquals": conditions,
+                    }),
+                    role_name="fluent-bit-role"
+                    )
+    policy = iam.Policy(self,
+       "fluent-bit-policy",
+        statements=[
+            iam.PolicyStatement(
+                    actions=["es:ESHttp*"],
+                    effect=iam.Effect.ALLOW,
+                    resources=[
+                        f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{esdomain}/*"]
+                                          )
+    ], policy_name="fluent-bit-policy")
+
+    policy.attach_to_role(role)
+
+    return role
