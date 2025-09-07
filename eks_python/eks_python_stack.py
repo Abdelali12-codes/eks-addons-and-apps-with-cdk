@@ -10,7 +10,7 @@ from .policies.main import *
 from .resources import *
 from .application import  *
 from .resources.custom_resources_cdk.esmappings import *
-from .addons  import EksAuth, Keda, Dashboard, Opentelemetry
+from .addons  import EksAuth, Keda, Dashboard, Opentelemetry, CertManagerAddon, IngressNginx, ExternalDns
 from  .configuration.config import opensearch
 
 class EksPythonStack(Stack):
@@ -50,24 +50,31 @@ class EksPythonStack(Stack):
         Keda(self, 'keda', cluster=cluster)
 
         # Dashboard
-        Dashboard(self, 'dashboard', cluster=cluster)
+        # Dashboard(self, 'dashboard', cluster=cluster)
 
         # Opensearch
-        opensearch = Opensearch(self, "Opensearch", cluster=cluster, vpc=vpc)
+        #opensearch = Opensearch(self, "Opensearch", cluster=cluster, vpc=vpc)
 
         # FluentBit
-        fluentbit = FluentBit(self, 'flutterbit', cluster=cluster,
-                  esdomain=opensearch.cfn_domain.attr_domain_endpoint,
-                  esdomainname=opensearch.cfn_domain.domain_name)
+        #fluentbit = FluentBit(self, 'flutterbit', cluster=cluster,
+        #          esdomain=opensearch.cfn_domain.attr_domain_endpoint,
+        #          esdomainname=opensearch.cfn_domain.domain_name)
 
         # Create ES Role Mapping
-        esmapping = EsMapping(self,"esmapping", esdomaine=opensearch.domain_endpoint,
-                  secretname=opensearch.essecret.secret_name,
-                  fluentbitrolearn=fluentbit.fluentbitrole.role_arn
-                  )
+        #esmapping = EsMapping(self,"esmapping", esdomaine=opensearch.domain_endpoint,
+        #          secretname=opensearch.essecret.secret_name,
+        #          fluentbitrolearn=fluentbit.fluentbitrole.role_arn
+        #          )
+
+        # cert manager
+        certmanger = CertManagerAddon(self, "certmanager", cluster=cluster, noderole=node_role)
+
+        # ingress nginx
+        # IngressNginx(self, "ingressnginx", cluster=cluster)
 
         # opentelemetry
-        #Opentelemetry(self, 'opentelemetry', cluster=cluster)
+        otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
+        otel.node.add_dependency(certmanger)
 
         # karpenter
         #EksKarpenter(self, "ekskarpenter", cluster=cluster, namespace="karpenter")
@@ -87,14 +94,8 @@ class EksPythonStack(Stack):
         # # argocd
         # # ArgocdApp(self, "argocdapp", cluster=cluster)
 
-        # # ingress nginx
-        # IngressNginx(self, "ingressnginx", cluster=cluster)
-
-        # # cert manager
-        # certmanger = CertManagerAddon(self, "certmanager", cluster=cluster , noderole=node_role)
-
-        # # external dns
-        # ExternalDns(self, "externaldns", cluster=cluster)
+        # external dns
+        ExternalDns(self, "externaldns", cluster=cluster)
         
         # # external secret
         # externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)

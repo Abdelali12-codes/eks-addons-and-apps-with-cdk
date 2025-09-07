@@ -361,13 +361,13 @@ def EbsDriverServicea(self, cluster):
                         )
 
 
-def AdotServiceAccount(self, cluster, namespace, serviceaccountname)-> iam.IRole:
+def AdotServiceAccount(self, cluster, namespacename, serviceaccountname)-> iam.IRole:
     conditions = CfnJson(self, 'ConditionJson',
                          value={
                              "%s:aud" % cluster.cluster_open_id_connect_issuer: "sts.amazonaws.com",
                              # namespace # serviceaccountname
                              "%s:sub" % cluster.cluster_open_id_connect_issuer: "system:serviceaccount:%s:%s" % (
-                                 namespace, serviceaccountname),
+                                 namespacename, serviceaccountname),
                          },
                          )
 
@@ -379,31 +379,111 @@ def AdotServiceAccount(self, cluster, namespace, serviceaccountname)-> iam.IRole
                     role_name="adot-collector"
                     )
     role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name="AmazonPrometheusRemoteWriteAccess"))
+    role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name="AWSXRayDaemonWriteAccess"))
+    role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name="CloudWatchAgentServerPolicy"))
+
     namespace = eks.KubernetesManifest(
         self,
-        "opentelemetrycollector",
+        "otel-namespace",
         cluster=cluster,
         manifest=[{
             "apiVersion": "v1",
             "kind": "Namespace",
-            "metadata": {"name": namespace}
+            "metadata": {"name": namespacename}
         }]
     )
-    servicea = eks.ServiceAccount(self, 'adot-collector-sa',
-                       cluster=cluster,
-                       name="adot-collector",
-                       labels={
-                           "app.kubernetes.io/name": "adot-collector",
-                           "app.kubernetes.io/managed-by": "Helm",
-                       },
-                       annotations={
-                           "eks.amazonaws.com/role-arn": role.role_arn,
-                           "meta.helm.sh/release-name": "opentelemetry-collector",
-                           "meta.helm.sh/release-namespace": "opentelemetry-collector",
-                       },
-                       namespace="opentelemetry-collector"
-                       )
-    servicea.node.add_dependency(namespace)
+
+    eks.ServiceAccount(self, 'aws-otel-collector-sa',
+                                  cluster=cluster,
+                                  name=serviceaccountname,
+                                  labels={
+                                      "app.kubernetes.io/name": serviceaccountname
+                                  },
+                                  annotations={
+                                      "eks.amazonaws.com/role-arn": role.role_arn,
+                                  },
+                                  namespace=namespacename
+                                  )
+
+    return role
+    #servicea = eks.ServiceAccount(self, 'adot-collector-sa',
+    #                   cluster=cluster,
+    #                   name="adot-collector",
+    #                   labels={
+    #                       "app.kubernetes.io/name": "adot-collector",
+    #                       "app.kubernetes.io/managed-by": "Helm",
+    #                   },
+    #                   annotations={
+    #                       "eks.amazonaws.com/role-arn": role.role_arn,
+    #                       "meta.helm.sh/release-name": "opentelemetry-collector",
+    #                       "meta.helm.sh/release-namespace": "opentelemetry-collector",
+    #                   },
+    #                   namespace="opentelemetry-collector"
+    #                   )
+    # servicea.node.add_dependency(namespace)
+
+def KedaServiceAccount(self, cluster, namespacename, serviceaccountname)-> iam.IRole:
+    conditions = CfnJson(self, 'ConditionJson',
+                         value={
+                             "%s:aud" % cluster.cluster_open_id_connect_issuer: "sts.amazonaws.com",
+                             # namespace # serviceaccountname
+                             "%s:sub" % cluster.cluster_open_id_connect_issuer: "system:serviceaccount:%s:%s" % (
+                                 namespacename, serviceaccountname),
+                         },
+                         )
+
+    role = iam.Role(self, "kedaOperatorRole",
+                    assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                    .with_conditions({
+                        "StringEquals": conditions,
+                    }),
+                    role_name="keda-operator"
+                    )
+    role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name="AmazonPrometheusQueryAccess"))
+
+    namespace = eks.KubernetesManifest(
+        self,
+        "keda-namespace",
+        cluster=cluster,
+        manifest=[{
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {"name": namespacename}
+        }]
+    )
+
+    eks.ServiceAccount(self, 'keda-operator-sa',
+                                  cluster=cluster,
+                                  name=serviceaccountname,
+                                  labels={
+                                      "app.kubernetes.io/name": serviceaccountname,
+                                      "app.kubernetes.io/managed-by": "Helm"
+                                  },
+                                  annotations={
+                                      "eks.amazonaws.com/role-arn": role.role_arn,
+                                      "meta.helm.sh/release-name": "keda",
+                                      "meta.helm.sh/release-namespace": "keda",
+                                  },
+                                  namespace=namespacename
+                                  )
+    role.node.add_dependency(namespace)
+
+    return role
+    #servicea = eks.ServiceAccount(self, 'adot-collector-sa',
+    #                   cluster=cluster,
+    #                   name="adot-collector",
+    #                   labels={
+    #                       "app.kubernetes.io/name": "adot-collector",
+    #                       "app.kubernetes.io/managed-by": "Helm",
+    #                   },
+    #                   annotations={
+    #                       "eks.amazonaws.com/role-arn": role.role_arn,
+    #                       "meta.helm.sh/release-name": "opentelemetry-collector",
+    #                       "meta.helm.sh/release-namespace": "opentelemetry-collector",
+    #                   },
+    #                   namespace="opentelemetry-collector"
+    #                   )
+    # servicea.node.add_dependency(namespace)
 
 def FluentBitSaRole(self, cluster, namespace, serviaccount, esdomain)-> iam.IRole:
     conditions = CfnJson(self, 'ConditionJson',

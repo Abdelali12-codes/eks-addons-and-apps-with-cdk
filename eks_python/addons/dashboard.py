@@ -19,7 +19,23 @@ class Dashboard(Resource):
                              repository="https://kubernetes.github.io/dashboard/",
                              chart="kubernetes-dashboard",
                              release="kubernetes-dashboard",
-                             wait=False
+                             wait=False,
+                             values= {
+                                 "app":{
+                                     "ingress": {
+                                         "enabled": True,
+                                         "hosts": ["k8sdashboard.abdelalitraining.com"],
+                                         "ingressClassName": "ingress-nginx",
+                                         "issuer": {
+                                             "scope": "cluster",
+                                             "name": "dns-01-production"
+                                         },
+                                         "tls": {
+                                             "secretName": "k8sdashboard-tls",
+                                         }
+                                     }
+                                 }
+                             }
                              )
 
 

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: irsa-python-sa
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::080266302756:role/eks-s3-role
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: irsa-python-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: irsa-app
+  template:
+    metadata:
+      labels:
+        app: irsa-app
+    spec:
+      serviceAccountName: irsa-python-sa
+      containers:
+      - name: python
+        image:  abdelalidocker/pythonk8ssa

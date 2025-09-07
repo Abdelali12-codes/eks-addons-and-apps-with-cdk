@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-prometheus-app
+  labels:
+    app: flask-prometheus-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-prometheus-app
+  template:
+    metadata:
+      labels:
+        app: flask-prometheus-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: flask-prometheus-app
+          image:  abdelalidocker/flaskprometheus  # Update if using an external registry
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-prometheus-service
+  labels:
+    app: flask-prometheus-app
+spec:
+  selector:
+    app: flask-prometheus-app
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flask-ingress
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: dns-01-production
+spec:
+  ingressClassName: ingress-nginx
+  rules:
+    - host: flaskingress.abdelalitraining.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: flask-prometheus-service
+                port:
+                  number: 5000
+  tls:
+    - hosts:
+        - flaskingress.abdelalitraining.com
+      secretName: flaskingress-abdelalitraining-com

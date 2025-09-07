@@ -30,7 +30,7 @@ class CertManagerAddon(Resource):
                       wait=False,
                       chart="cert-manager",
                       values= {
-                          "installCRDs": "true",
+                          "installCRDs": True,
                           "serviceAccount":{
                               "name": "cert-manager",
                           }

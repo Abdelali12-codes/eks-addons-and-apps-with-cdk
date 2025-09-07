@@ -443,4 +443,33 @@ spec:
     }
   ]
 }
+# AWS EKS Addons Compatibility 
+```
+aws eks describe-addon-versions --addon-name adot --kubernetes-version eks-version
+```
+
+# Run Grafana Enterprise
+```
+docker run  -d -p 3000:3000 --name=grafanaen -v  "C:/Users/Abdelali Jadelmoula/data:/usr/share/grafana/.aws/:ro"  -e AWS_SDK_LOAD_CONFIG=true -e GF_AUTH_SIGV4_AUTH_ENABLED=true grafana/grafana-enterprise
+```
+
+# Metrics (Metrics Server)
+```
+kubectl get --raw "/apis/metrics.k8s.io/v1beta2" | jq .
+```
+# Custom metrics
+```
+# you can pipe to `jq .` to pretty-print the output, if it's installed
+# (otherwise, it's not necessary)
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta2" | jq .
+# fetching certain custom metrics of namespaced resources
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta2/namespaces/default/services/kubernetes/test-metric" | jq .
+```
+
+# external metrics
+
+```
+kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1" | jq .
+# fetching certain custom metrics of namespaced resources
+kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1/namespaces/default/my-external-metric" | jq .
 ```
