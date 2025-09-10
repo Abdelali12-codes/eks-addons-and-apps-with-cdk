@@ -25,9 +25,9 @@ def create_k8s_secret(secret_name, namespace, data_dict):
     # Load in-cluster config (ServiceAccount token)
     config.load_incluster_config()
     v1 = client.CoreV1Api()
-
+    connection = f"postgresql://{data_dict['username']}:{data_dict['password']}@{data_dict['host']}:5432/{data_dict['dbname']}?sslmode=disable"
     # Kubernetes Secret data must be base64-encoded
-    data_encoded = {k: base64.b64encode(v.encode()).decode() for k, v in data_dict.items()}
+    data_encoded = {"connection": base64.b64encode(connection.encode()).decode()}
 
     secret_body = client.V1Secret(
         metadata=client.V1ObjectMeta(name=secret_name, namespace=namespace),
