@@ -10,7 +10,18 @@ from .policies.main import *
 from .resources import *
 from .application import  *
 from .resources.custom_resources_cdk.esmappings import *
-from .addons  import EksAuth, Keda, Dashboard, Opentelemetry, CertManagerAddon, IngressNginx, ExternalDns
+from .addons  import (
+    EksAuth, 
+    Keda, 
+    Dashboard, 
+    Opentelemetry, 
+    CertManagerAddon, 
+    IngressNginx, 
+    ExternalDns, 
+    EbsDriver, 
+    EfsDriver,
+    ExternalSecret
+)
 from  .configuration.config import opensearch
 
 class EksPythonStack(Stack):
@@ -45,9 +56,19 @@ class EksPythonStack(Stack):
 
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
+        
+        # efs driver 
+        efsdriver = EfsDriver(self, "efsdriver", cluster=cluster)
+        # ebs driver 
+        ebsdriver = EbsDriver(self, "ebsdriver", cluster=cluster)
 
+        # rds 
+        rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
+
+        # Airflow
+        airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
         # Keda
-        Keda(self, 'keda', cluster=cluster)
+        # Keda(self, 'keda', cluster=cluster)
 
         # Dashboard
         # Dashboard(self, 'dashboard', cluster=cluster)
@@ -70,11 +91,11 @@ class EksPythonStack(Stack):
         certmanger = CertManagerAddon(self, "certmanager", cluster=cluster, noderole=node_role)
 
         # ingress nginx
-        # IngressNginx(self, "ingressnginx", cluster=cluster)
+        IngressNginx(self, "ingressnginx", cluster=cluster)
 
         # opentelemetry
-        otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
-        otel.node.add_dependency(certmanger)
+        # otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
+        # otel.node.add_dependency(certmanger)
 
         # karpenter
         #EksKarpenter(self, "ekskarpenter", cluster=cluster, namespace="karpenter")
@@ -85,20 +106,14 @@ class EksPythonStack(Stack):
         # # s3 driver
         # S3DriverMount(self, "s3driver", cluster=cluster)
 
-        # # ebs driver 
-        # EbsDriver(self, "ebsdriver", cluster=cluster)
-
-        # # rds 
-        # rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
-
         # # argocd
         # # ArgocdApp(self, "argocdapp", cluster=cluster)
 
         # external dns
         ExternalDns(self, "externaldns", cluster=cluster)
         
-        # # external secret
-        # externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
+        # external secret
+        externalsecret = ExternalSecret(self, "externalsecret", cluster=cluster)
 
         # # Applications
         # keycloakapp = KeycloakApp(self, "keycloakapp", cluster=cluster, dbsecret= rdsdb, 
@@ -108,5 +123,9 @@ class EksPythonStack(Stack):
         # applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
         # applications.node.add_dependency(certmanger)
         # applications.node.add_dependency(externalsecret)
+        airflow.node.add_dependency(ebsdriver)
+        airflow.node.add_dependency(efsdriver)
+        airflow.node.add_dependency(certmanger)
+
 
         

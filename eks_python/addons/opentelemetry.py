@@ -50,8 +50,8 @@ class Opentelemetry(Resource):
         yaml_file = yaml.safe_load_all(rendered_template)
 
         for i, manifest in enumerate(yaml_file):
-            k8s_manifest = cluster.add_manifest(f'opentelemetry-{manifest['kind'].lower()}', manifest)
+            k8s_manifest = cluster.add_manifest(f"opentelemetry-{manifest['kind'].lower()}", manifest)
             k8s_manifest.node.add_dependency(adotaddon)
-            resources_dependency[f'opentelemetry-{manifest['kind'].lower()}'] = k8s_manifest
+            resources_dependency[f"opentelemetry-{manifest['kind'].lower()}"] = k8s_manifest
 
         CfnOutput(self, "aps", value=managedprometheus.attr_prometheus_endpoint)

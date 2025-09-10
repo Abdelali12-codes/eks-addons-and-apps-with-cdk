@@ -58,5 +58,5 @@ class Keda(Resource):
         yaml_file = yaml.safe_load_all(rendered_template)
 
         for i, manifest in enumerate(yaml_file):
-            k8s_manifest = cluster.add_manifest(f'keda-{manifest['kind'].lower()}', manifest)
+            k8s_manifest = cluster.add_manifest(f"keda-{manifest['kind'].lower()}", manifest)
             k8s_manifest.node.add_dependency(kedasa)

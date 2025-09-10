@@ -34,7 +34,7 @@ class ExternalSecret(Resource):
         clustersecretstore= eks.KubernetesManifest(self, "ClusterSecretStoreSM",
                               cluster= cluster,
                               manifest=[{
-                                "apiVersion": "external-secrets.io/v1beta1",
+                                "apiVersion": "external-secrets.io/v1",
                                 "kind": "ClusterSecretStore",
                                 "metadata":{
                                     "name": "aws-secrets-manager"
@@ -61,7 +61,7 @@ class ExternalSecret(Resource):
         clusterparameterstore= eks.KubernetesManifest(self, "ClusterSecretStoreSSM",
                               cluster= cluster,
                               manifest=[{
-                                "apiVersion": "external-secrets.io/v1beta1",
+                                "apiVersion": "external-secrets.io/v1",
                                 "kind": "ClusterSecretStore",
                                 "metadata":{
                                     "name": "aws-parameter-store"

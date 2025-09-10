@@ -345,7 +345,7 @@ def EbsDriverServicea(self, cluster):
         
         policy.attach_to_role(role)
         
-        servicea = eks.ServiceAccount(self, 's3-csi-driver-sa',
+        servicea = eks.ServiceAccount(self, 'ebs-csi-driver-sa',
                            cluster=cluster,
                            name="ebs-csi-controller-sa",
                            labels= {
@@ -359,6 +359,48 @@ def EbsDriverServicea(self, cluster):
                            },
                            namespace="kube-system"
                         )
+
+def EfsDriverServicea(self, cluster):
+        conditions = CfnJson(self, 'ConditionJson',
+          value = {
+            "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",            # namespace # serviceaccountname
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("kube-system","ebs-csi-controller-sa"),
+          },
+         )
+
+        role =  iam.Role(self, "EfsDriverRole",
+                          assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                                     .with_conditions({
+                                        "StringEquals": conditions,
+                                     }),
+                                role_name="efsdriverrole"
+                        )
+        
+        statements = []
+        with open(os.path.join(DIR, 'efs_policy.json'), 'r') as f:
+                data = json.load(f)
+                for s in data['Statement']:
+                    statements.append(iam.PolicyStatement.from_json(s))
+
+        policy = iam.Policy(self, "efsdriver",statements=statements, policy_name="efsdriverpolicy")
+        
+        policy.attach_to_role(role)
+        
+        servicea = eks.ServiceAccount(self, 'efs-csi-driver-sa',
+                           cluster=cluster,
+                           name="efs-csi-controller-sa",
+                           labels= {
+                                "app.kubernetes.io/name": "efs-csi-controller-sa",
+                                "app.kubernetes.io/managed-by": "Helm",
+                           },
+                           annotations= {
+                                "eks.amazonaws.com/role-arn": role.role_arn,
+                                "meta.helm.sh/release-name": "aws-efs-csi-driver", 
+                                "meta.helm.sh/release-namespace": "kube-system", 
+                           },
+                           namespace="kube-system"
+                        )
+
 
 
 def AdotServiceAccount(self, cluster, namespacename, serviceaccountname)-> iam.IRole:

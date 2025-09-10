@@ -37,7 +37,7 @@ class Applications(Resource):
                         ]
 
                         # secretmanager secret
-                        cluster.add_manifest(f'{manifest['metadata']['name']}-externalsecret-sm',{
+                        cluster.add_manifest(f'{manifest["metadata"]["name"]}-externalsecret-sm',{
                                 "apiVersion": "external-secrets.io/v1beta1",
                                 "kind": "ExternalSecret",
                                 "metadata":{
@@ -84,7 +84,7 @@ class Applications(Resource):
 
                         # ssm secret
 
-                        cluster.add_manifest(f'{manifest['metadata']['name']}-externalsecret-ssm',{
+                        cluster.add_manifest(f'{manifest["metadata"]["name"]}-externalsecret-ssm',{
                                 "apiVersion": "external-secrets.io/v1beta1",
                                 "kind": "ExternalSecret",
                                 "metadata":{
@@ -118,6 +118,6 @@ class Applications(Resource):
             
                                 }
                         })
-                    cluster.add_manifest(f'{manifest['metadata']['name']}-{manifest['kind']}', manifest)
+                    cluster.add_manifest(f'{manifest["metadata"]["name"]}-{manifest["kind"]}', manifest)
                 
                 

@@ -1,0 +1,34 @@
+{
+  "apiVersion": "storage.k8s.io/v1",
+  "kind": "StorageClass",
+  "metadata": {
+    "name": "ebs-sc"
+  },
+  "provisioner": "ebs.csi.aws.com",
+  "parameters": {
+    "type": "gp3",
+    "fsType": "ext4",
+    "encrypted": "true",
+    "iops": "3000",
+    "throughput": "250"
+  },
+  "reclaimPolicy": "Delete",
+  "volumeBindingMode": "WaitForFirstConsumer",
+  "allowVolumeExpansion": true,
+  "mountOptions": [
+    "noatime"
+  ],
+  "allowedTopologies": [
+    {
+      "matchLabelExpressions": [
+        {
+          "key": "topology.kubernetes.io/zone",
+          "values": [
+            "us-east-1a",
+            "us-east-1b"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -37,5 +37,5 @@ class FluentBit(Resource):
 
         documents = yaml.load_all(rendered_template)
         for index, manifest in enumerate(documents):
-            manifest = cluster.add_manifest(f'{manifest['metadata']['name']}-{manifest['kind']}', manifest)
+            manifest = cluster.add_manifest(f"{manifest['metadata']['name']}-{manifest['kind']}", manifest)
             manifest.node.add_dependency(fluentbit_namespace)

@@ -35,4 +35,4 @@ class ExternalDns(Resource):
         yaml_file = yaml.safe_load_all(rendered_template)
 
         for i, manifest in enumerate(yaml_file):
-             cluster.add_manifest(f'externadns-{manifest['kind'].lower()}', manifest)
+             cluster.add_manifest(f"externadns-{manifest['kind'].lower()}", manifest)

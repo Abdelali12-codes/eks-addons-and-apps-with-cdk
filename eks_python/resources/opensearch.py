@@ -43,14 +43,14 @@ class Opensearch(Resource):
                                           effect=iam.Effect.ALLOW,
                                           principals= [iam.ArnPrincipal(f"arn:{Stack.of(self).partition}:iam::{Stack.of(self).account}:role/getsecret-lambda-role")],
                                           resources=[
-                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch["es_domain_name"]}/*"]
+                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
                                       ),
                                       iam.PolicyStatement(
                                          actions=["es:ESHttp*"],
                                           effect=iam.Effect.ALLOW,
                                           principals= [iam.ArnPrincipal(f"arn:{Stack.of(self).partition}:iam::{Stack.of(self).account}:role/fluent-bit-role")],
                                           resources=[
-                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch["es_domain_name"]}/*"]
+                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
                                       ),
                                       iam.PolicyStatement(
                                           actions=["es:ESHttp*"],
@@ -62,7 +62,7 @@ class Opensearch(Resource):
                                               }
                                           },
                                           resources=[
-                                              f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch["es_domain_name"]}/*"]
+                                              f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
                                       )
                                   ]),
                                   advanced_security_options=es.CfnDomain.AdvancedSecurityOptionsInputProperty(

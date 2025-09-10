@@ -7,7 +7,7 @@ import os
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
-class EbsDriver(Resource):
+class EfsDriver(Resource):
     def __init__(self, scope, id , **kwargs):
         super().__init__(scope, id)
 
@@ -17,36 +17,23 @@ class EbsDriver(Resource):
         else:
             raise Exception("you should provide the cluster arg")
     
-        EbsDriverServicea(self, cluster=cluster)
-        argohelm = eks.HelmChart(self, "ebs-csi-helm-chart",
+        EfsDriverServicea(self, cluster=cluster)
+        argohelm = eks.HelmChart(self, "efs-csi-helm-chart",
                       cluster= cluster,
                       namespace= "kube-system",
-                      repository="https://kubernetes-sigs.github.io/aws-ebs-csi-driver",
-                      release="aws-ebs-csi-driver",
+                      repository="https://kubernetes-sigs.github.io/aws-efs-csi-driver",
+                      release="aws-efs-csi-driver",
                       wait=True,
-                      chart="aws-ebs-csi-driver",
+                      chart="aws-efs-csi-driver",
                       values= {
                            "controller": {
                             "serviceAccount": {
                                 "create": False,
-                                "name": "ebs-csi-controller-sa",
+                                "name": "efs-csi-controller-sa",
                             }
                             },
                       }
                       
                     )
         
-        cluster.add_manifest("ebs-storage-class", {
-            "apiVersion": "storage.k8s.io/v1",
-            "kind": "StorageClass",
-            "metadata": {
-                "name": "ebs-sc",
-                "annotations": {
-                  "storageclass.kubernetes.io/is-default-class": "true"
-                }
-            },
-            "provisioner": "ebs.csi.aws.com",
-            "volumeBindingMode": "WaitForFirstConsumer",
-            "allowVolumeExpansion": True
-            })
        

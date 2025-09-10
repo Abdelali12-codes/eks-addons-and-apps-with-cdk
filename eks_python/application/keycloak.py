@@ -26,6 +26,6 @@ class KeycloakApp(Resource):
 
         documents = yaml.load_all(rendered_template)    
         for index, manifest in enumerate(documents):
-                cluster.add_manifest(f'{manifest['metadata']['name']}-{manifest['kind']}', manifest)
+                cluster.add_manifest(f"{manifest['metadata']['name']}-{manifest['kind']}", manifest)
             
             

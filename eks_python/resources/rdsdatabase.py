@@ -52,7 +52,7 @@ class RdsDatabase(Resource):
         db_rds = rds.DatabaseInstance(self, f"{id}-rdsinstance",
                 instance_identifier=rdsdb["instance_identifier"],
                 database_name=rdsdb["database_name"],
-                engine=rds.DatabaseInstanceEngine.MYSQL,
+                engine=rds.DatabaseInstanceEngine.POSTGRES,
                 allocated_storage= rdsdb["allocated_storage"],
                 instance_type=rdsdb["instance_type"],
                 vpc_subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),

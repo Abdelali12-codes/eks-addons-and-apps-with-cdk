@@ -24,12 +24,12 @@ vpc  = {
  }
 
 rdsdb = {
-   "instance_identifier":"rds-microservice",
+   "instance_identifier":"rds-airflow",
    "secretname": "rdssecret",
    "allocated_storage": 40,
    "subnet_group_name": "rdsgroupname",
-   "database_name": "microservice",
-   "db_username": "abdelali",
+   "database_name": "airflow",
+   "db_username": "airflow",
    "instance_type": ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM)
 }
 
