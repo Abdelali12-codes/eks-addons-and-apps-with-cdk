@@ -121,6 +121,14 @@ These three pieces plus the service host/port are **exactly what load\_incluster
 
 ### ✅ **Summary**
 
-ComponentPath / Env VariablePurposeService Account Token/var/run/secrets/kubernetes.io/serviceaccount/token Authenticate pod to K8s APICA Certificate /var/run/secrets/kubernetes.io/serviceaccount/ca.crt Validate API server SSL Namespace /var/run/secrets/kubernetes.io/serviceaccount/namespace Know the pod’s namespace Kubernetes API URL KUBERNETES\_SERVICE\_HOST + KUBERNETES\_SERVICE\_PORT Endpoint to connect to Kubernetes API server
+### Kubernetes In-Cluster Config Summary
+
+| Component                 | Path / Environment Variable                                      | Purpose                                      |
+|----------------------------|-----------------------------------------------------------------|----------------------------------------------|
+| Service Account Token      | `/var/run/secrets/kubernetes.io/serviceaccount/token`           | Authenticate pod to Kubernetes API          |
+| CA Certificate             | `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`          | Validate API server SSL                      |
+| Namespace                  | `/var/run/secrets/kubernetes.io/serviceaccount/namespace`       | Identify the pod’s namespace                |
+| Kubernetes API URL         | `KUBERNETES_SERVICE_HOST` + `KUBERNETES_SERVICE_PORT`           | Endpoint to connect to Kubernetes API server|
+
 
 So, when you call config.load\_incluster\_config(), **all of this is automatically picked up**—no need to pass anything manually.
