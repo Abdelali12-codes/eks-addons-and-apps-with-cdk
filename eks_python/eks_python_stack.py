@@ -68,7 +68,7 @@ class EksPythonStack(Stack):
         rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
 
         # Airflow
-        # airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
+        airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
         # Keda
         # Keda(self, 'keda', cluster=cluster)
 

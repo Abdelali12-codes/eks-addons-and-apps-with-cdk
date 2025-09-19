@@ -32,6 +32,16 @@ class Airflow(Resource):
                       wait=False,
                       chart="airflow",
                       values= {
+                            "airflowVersion": "2.11.0",
+                            "defaultAirflowTag": "2.11.0",
+                            "airflowLocalSettings": """
+                                {{- if semverCompare ">=2.2.0 <3.0.0" .Values.airflowVersion }}
+                                {{- if not (or .Values.webserverSecretKey .Values.webserverSecretKeySecretName) }}
+                                print("airflow")
+                                {{- end }}
+                                {{- end }}
+                                """
+                            ,
                             "postgresql": {
                               "enabled": False
                             },
@@ -50,14 +60,19 @@ class Airflow(Resource):
                                             }
                                        }
                                    ],
+                                   "ingressClassName": "ingress-nginx"
                                }
                             },
+                            # {
+                            #     "webserverSecretKeySecretName": "",
+                            #     "jwtSecretName": ""
+                            # },
                             "createUserJob": {
                                 "useHelmHooks": False,
                                 "applyCustomEnv": False
                             },
                             "migrateDatabaseJob": {
-                                "enabled": False,
+                                # "enabled": False,
                                 "useHelmHooks": False,
                                 "applyCustomEnv": False
                             },
@@ -65,7 +80,7 @@ class Airflow(Resource):
                               "metadataSecretName": "airflow-metadata-secret",
                               "resultBackendSecretName": "airflow-backendresult-secret"
                             },
-                            "trigger": {
+                            "triggerer": {
                                 "persistence": {
                                     "enabled": False
                                 }
@@ -92,10 +107,10 @@ class Airflow(Resource):
         
         airflowmetadataSecret = eks.KubernetesManifest(
                 self,
-                "databaseSecret",
+                "metadataSecret",
                 cluster=cluster,
                 manifest=[{
-                    "apiVersion": "external-secrets.io/v1beta1",
+                    "apiVersion": "external-secrets.io/v1",
                     "kind": "ExternalSecret",
                     "metadata": {
                         "name": "airflow-metadata-secret",
@@ -130,10 +145,10 @@ class Airflow(Resource):
 
         airflowbackendresultSecret = eks.KubernetesManifest(
                 self,
-                "databaseSecret",
+                "backendresultSecret",
                 cluster=cluster,
                 manifest=[{
-                    "apiVersion": "external-secrets.io/v1beta1",
+                    "apiVersion": "external-secrets.io/v1",
                     "kind": "ExternalSecret",
                     "metadata": {
                         "name": "airflow-backendresult-secret",

@@ -22,12 +22,12 @@ class RdsDatabase(Resource):
 
         db_sg = ec2.SecurityGroup(self, "SecurityGroup",
             vpc=vpc,
-            description="rds-microservices-sg",
-            security_group_name="rds-microservices-sg",
+            description="rds-airflow-sg",
+            security_group_name="rds-airflow-sg",
             allow_all_outbound=True,
         )
 
-        db_sg.add_ingress_rule(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(3306), "allow postgres")
+        db_sg.add_ingress_rule(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(5432), "allow postgres")
 
         subnet_group = rds.SubnetGroup(self, f"{id}-subnetgroup",
             description="description",
@@ -49,6 +49,15 @@ class RdsDatabase(Resource):
                           )         
                         )
 
+        pg_param_group = rds.ParameterGroup(
+            self, "CustomPostgres17ParamGroup",
+            engine=rds.DatabaseInstanceEngine.postgres(
+                version=rds.PostgresEngineVersion.VER_17  # Postgres 17
+            ),
+            parameters={
+                "rds.force_ssl": "0"  # Disable forced SSL
+            }
+        )
         db_rds = rds.DatabaseInstance(self, f"{id}-rdsinstance",
                 instance_identifier=rdsdb["instance_identifier"],
                 database_name=rdsdb["database_name"],
@@ -59,6 +68,7 @@ class RdsDatabase(Resource):
                 credentials=rds.Credentials.from_secret(self.dbsecret),
                 vpc=vpc,
                 storage_type= rds.StorageType.GP2,
+                parameter_group= pg_param_group,
                 security_groups=[db_sg],
                 subnet_group= subnet_group,
                 removal_policy= RemovalPolicy.DESTROY,
