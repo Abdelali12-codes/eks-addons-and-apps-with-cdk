@@ -69,3 +69,54 @@ opensearch = {
         volume_type="gp2"
     )
 }
+
+client_vpn_config = {
+    # Basic VPN settings
+    'client_cidr_block': '172.31.0.0/16',  # CIDR block for VPN clients
+    'dns_servers': ['8.8.8.8', '8.8.4.4'],
+    'transport_protocol': 'udp',  # 'udp' or 'tcp'
+    'vpn_port': 443,
+    
+    # Mutual Authentication Certificate settings
+    # Option 1: Provide certificate IDs (ARNs will be constructed)
+    'server_cert_id': 'YOUR_SERVER_CERT_ID',  # Replace with actual certificate ID from ACM
+    'client_cert_id': 'YOUR_CLIENT_CERT_ID',  # Replace with actual certificate ID from ACM
+    
+    # Option 2: Provide full ARNs directly (these will override the IDs above)
+    # 'server_certificate_arn': 'arn:aws:acm:region:account:certificate/server-cert-id',
+    # 'client_certificate_arn': 'arn:aws:acm:region:account:certificate/client-cert-id',
+    
+    # VPN behavior settings
+    'self_service_portal': 'enabled',  # 'enabled' or 'disabled'
+    'session_timeout_hours': 8,
+    'split_tunnel': True,
+    'logging_enabled': True,
+    
+    # Network settings
+    'target_subnet_type': 'private_subnets',  # 'private_subnets', 'public_subnets', or 'isolated_subnets'
+    'allow_vpc_access': True,
+    'allow_internet_access': True,
+    'internet_route_enabled': True,
+    
+    # Tags
+    'environment': 'Production',
+    'project_name': 'MyProject',
+    
+    # Custom authorization rules (optional)
+    'authorization_rules': [
+        # {
+        #     'target_network_cidr': '10.1.0.0/16',
+        #     'authorize_all_groups': True,
+        #     'access_group_id': None,  # Optional: specific group ID
+        #     'description': 'Allow access to specific network'
+        # }
+    ],
+    
+    # Custom routes (optional)
+    'routes': [
+        # {
+        #     'destination_cidr_block': '192.168.1.0/24',
+        #     'description': 'Route to on-premises network'
+        # }
+    ]
+}

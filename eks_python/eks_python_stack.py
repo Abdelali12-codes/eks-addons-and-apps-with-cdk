@@ -53,7 +53,9 @@ class EksPythonStack(Stack):
             subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             instance_types= [ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM)]
         )
-
+        # client Vpn
+        # ClientVpn(self, "clientVpn", vpc_instance=vpc.vpc)
+        
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
         
@@ -66,7 +68,7 @@ class EksPythonStack(Stack):
         rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
 
         # Airflow
-        airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
+        # airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
         # Keda
         # Keda(self, 'keda', cluster=cluster)
 
@@ -123,9 +125,9 @@ class EksPythonStack(Stack):
         # applications = Applications(self, "k8sapplications", cluster=cluster, noderole=node_role, db=rdsdb)
         # applications.node.add_dependency(certmanger)
         # applications.node.add_dependency(externalsecret)
-        airflow.node.add_dependency(ebsdriver)
-        airflow.node.add_dependency(efsdriver)
-        airflow.node.add_dependency(certmanger)
+        # airflow.node.add_dependency(ebsdriver)
+        # airflow.node.add_dependency(efsdriver)
+        # airflow.node.add_dependency(certmanger)
 
 
         
