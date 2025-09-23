@@ -99,6 +99,15 @@ class Airflow(Resource):
                                 "persistence": {
                                     "enabled": True,
                                     "storageClassName": "ebs-sc"
+                                },
+                                "gitSync": {
+                                    "enabled": True,
+                                    "repo": "https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git",
+                                    "branch": "master",
+                                    "rev": "HEAD",
+                                    "ref": "master",
+                                    "depth": 1,
+                                    "subPath": "tests/dags"
                                 }
                             }
                       }

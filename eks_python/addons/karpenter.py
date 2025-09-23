@@ -124,7 +124,7 @@ class EksKarpenter(Resource):
 
         # karpenter nodeclass
         nodeclass = cluster.add_manifest("karpenternodeclass", {
-            'apiVersion': 'karpenter.k8s.aws/v1beta1',
+            'apiVersion': 'karpenter.sh/v1',
             'kind': 'EC2NodeClass',
             'metadata': {
                 'name': "default",
