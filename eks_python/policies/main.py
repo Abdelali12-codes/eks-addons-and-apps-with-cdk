@@ -203,6 +203,55 @@ def ExternalSecretServiceAccount(self, cluster):
 
 
 
+def AirflowServiceAccount(self, cluster) -> iam.IRole:
+        conditions = CfnJson(self, 'ConditionJson',
+          value = {
+            "%s:aud" % cluster.cluster_open_id_connect_issuer : "sts.amazonaws.com",
+            "%s:sub" % cluster.cluster_open_id_connect_issuer : "system:serviceaccount:%s:%s" % ("airflow","airflow-sa"),
+          },
+        )
+
+        role =  iam.Role(self, "AirflowRole",
+                          assumed_by=iam.OpenIdConnectPrincipal(cluster.open_id_connect_provider)
+                                     .with_conditions({
+                                        "StringEquals": conditions,
+                                     }),
+                                role_name="airflow-role"
+                        )
+        
+        policy = iam.Policy(self, "airflowpolicy",
+                             statements=[
+                                     
+                                     iam.PolicyStatement(
+                                             actions=[
+                                                "s3:ListBucket",
+                                                "s3:GetObject",
+                                                "s3:PutObject"
+                                             ],
+                                             resources=["*"],
+                                             effect=iam.Effect.ALLOW
+
+                                     )
+                             ])
+        policy.attach_to_role(role=role)
+        servicea = eks.ServiceAccount(self, 'airflowsa',
+                           cluster=cluster,
+                           name="airflow-sa",
+                           labels= {
+                                "app.kubernetes.io/name": "airflow-sa",
+                                "app.kubernetes.io/managed-by": "Helm",
+                           },
+                           annotations= {
+                                "eks.amazonaws.com/role-arn": role.role_arn,
+                                "meta.helm.sh/release-name": "airflow", 
+                                "meta.helm.sh/release-namespace": "airflow"
+                           },
+                           namespace="airflow"
+                        )
+        return role
+
+
+
 def lambdaRole(self, id):
         lambda_role = iam.Role(self, f"lambda-role-{id}",
                              assumed_by= iam.ServicePrincipal('lambda.amazonaws.com'),

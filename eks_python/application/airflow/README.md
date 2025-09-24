@@ -85,3 +85,16 @@
 | T (Burstable)    | Low      | Moderate | EBS           | Dev/test Airflow                     |
 | P/G/F (Accelerated)| GPU/FPGA | Varies  | Varies        | ML / graphics tasks                  |
 | HPC/Inf          | Very High| High    | High-speed    | HPC or ML inference                  |
+
+
+# Airflow Components and How They Use `airflow.cfg`
+
+| Component                     | Uses `airflow.cfg` for…                                                                                   |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------|
+| **Webserver**                 | - Configures UI settings (`webserver` section)  <br> - Reads RBAC, proxy, and port settings  <br> - StatsD / metrics settings (`metrics` section) |
+| **Scheduler**                 | - Reads core settings (`executor`, `dags_folder`, etc.)  <br> - Scheduler-specific settings (`scheduler` section)  <br> - StatsD / metrics |
+| **Worker**                    | - Reads core (`executor`, `dags_folder`)  <br> - Celery or Kubernetes executor config (`celery`, `celery_kubernetes_executor`, `kubernetes_executor` sections)  <br> - Logging settings (`logging`) |
+| **CLI / airflow commands**     | - Uses general core settings and connections to determine environment paths, logging, executor type, etc. |
+| **Logging subsystem**          | - Uses `[logging]` and `[elasticsearch]` or `[elasticsearch_configs]` sections to configure log format, remote storage, retries |
+| **KubernetesExecutor / Pod**  | - Reads `[kubernetes]` or `[kubernetes_executor]` sections for pod templates, namespaces, image, etc. |
+| **Security (FAB / Kerberos)** | - `[fab]` and `[kerberos]` sections configure authentication and Kerberos tickets |

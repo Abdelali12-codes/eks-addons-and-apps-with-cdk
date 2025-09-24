@@ -2,7 +2,8 @@ from aws_cdk import (Resource, CfnDynamicReference, Fn, Stack, CfnDynamicReferen
 from jinja2 import Environment, FileSystemLoader
 import aws_cdk.aws_eks  as eks
 import aws_cdk.aws_secretsmanager as sm
-from ..policies.main import FluentBitSaRole
+import aws_cdk.aws_s3 as s3
+from ..policies.main import AirflowServiceAccount
 import os
 from ..configuration.config import *
 
@@ -23,6 +24,10 @@ class Airflow(Resource):
                        "metadata": {"name": "airflow"}
                 }]
             )
+        airflowloggingbucket = s3.Bucket(self, "airflowloggingbucket",
+                      bucket_name="airflow-logging-bucket-24-09-2025"                     
+                    )
+        airflowsa = AirflowServiceAccount(self, cluster=cluster)
         airflowhelm = eks.HelmChart(self, "airflow-helm-chart",
                       cluster= cluster,
                       namespace= "airflow",
@@ -85,7 +90,23 @@ class Airflow(Resource):
                                     "enabled": False
                                 }
                             },
+                            "webserver": {
+                                "serviceAccount": {
+                                    "create": False,
+                                    "name": "airflow-sa",
+                                    "annotations": {
+                                        "eks.amazonaws.com/role-arn": airflowsa.role_arn
+                                    }
+                                }
+                            },
                             "workers": {
+                                "serviceAccount": {
+                                    "create": False,
+                                    "name": "airflow-sa",
+                                    "annotations": {
+                                        "eks.amazonaws.com/role-arn": airflowsa.role_arn
+                                    }
+                                },
                                 "persistence": {
                                     "enabled": False
                                 }
@@ -108,6 +129,16 @@ class Airflow(Resource):
                                     "ref": "master",
                                     "depth": 1,
                                     "subPath": "tests/dags"
+                                }
+                            },
+                            "config": {
+                                "logging": {
+                                    "remote_logging": True,
+                                    "logging_level": "INFO",
+                                    "remote_base_log_folder": f"s3://{airflowloggingbucket.bucket_name}/airflow",
+                                    "remote_log_conn_id": "aws_conn",
+                                    "delete_worker_pods": False,
+                                    "encrypt_s3_logs": True
                                 }
                             }
                       }
@@ -194,3 +225,4 @@ class Airflow(Resource):
         airflowbackendresultSecret.node.add_dependency(airflownamespace)
         airflowmetadataSecret.node.add_dependency(airflowhelm)
         airflowmetadataSecret.node.add_dependency(airflownamespace)
+        airflowsa.node.add_dependency(airflownamespace)
