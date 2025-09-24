@@ -1,4 +1,4 @@
-from aws_cdk import (Resource, CfnDynamicReference, Fn, Stack, CfnDynamicReferenceService)
+from aws_cdk import (Resource, RemovalPolicy, CfnDynamicReference, Fn, Stack, CfnDynamicReferenceService)
 from jinja2 import Environment, FileSystemLoader
 import aws_cdk.aws_eks  as eks
 import aws_cdk.aws_secretsmanager as sm
@@ -25,7 +25,8 @@ class Airflow(Resource):
                 }]
             )
         airflowloggingbucket = s3.Bucket(self, "airflowloggingbucket",
-                      bucket_name="airflow-logging-bucket-24-09-2025"                     
+                      bucket_name="airflow-logging-bucket-24-09-2025",
+                      removal_policy= RemovalPolicy.RETAIN                
                     )
         airflowsa = AirflowServiceAccount(self, cluster=cluster)
         airflowhelm = eks.HelmChart(self, "airflow-helm-chart",
