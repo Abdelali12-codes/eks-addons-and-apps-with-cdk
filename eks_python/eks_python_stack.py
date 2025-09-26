@@ -38,7 +38,7 @@ class EksPythonStack(Stack):
               cluster_name="eks-cluster",
               vpc=vpc.vpc,
               vpc_subnets=[ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC)],
-              version=eks.KubernetesVersion.V1_29,
+              version=eks.KubernetesVersion.V1_32,
               role=master_role,
               default_capacity=0,
               kubectl_layer=KubectlV27Layer(self, "layer")
@@ -58,7 +58,7 @@ class EksPythonStack(Stack):
         
         # EksAuth
         EksAuth(self, 'eksauth', cluster=cluster, node_role=node_role)
-        
+
         # efs driver 
         efsdriver = EfsDriver(self, "efsdriver", cluster=cluster)
         # ebs driver 
@@ -93,8 +93,12 @@ class EksPythonStack(Stack):
         certmanger = CertManagerAddon(self, "certmanager", cluster=cluster, noderole=node_role)
 
         # ingress nginx
-        IngressNginx(self, "ingressnginx", cluster=cluster)
-
+        ingress = IngressNginx(self, "ingressnginx", cluster=cluster)
+        
+        # locust
+        locust = Locust(self, "locust", cluster=cluster)        
+        locust.node.add_dependency(ingress)
+        locust.node.add_dependency(certmanger)
         # opentelemetry
         # otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
         # otel.node.add_dependency(certmanger)
