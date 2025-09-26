@@ -100,7 +100,7 @@ it **automatically consumes certain files and environment variables that are ava
     
     *   The namespace in which the pod is running.
         
-4.  KUBERNETES\_SERVICE\_HOSTKUBERNETES\_SERVICE\_PORT
+4.  KUBERNETES\_SERVICE\_HOST KUBERNETES\_SERVICE\_PORT
     
     *   These are automatically injected into the pod by Kubernetes.
         
