@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: database-operator
+  namespace: database-operator
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: database-operator-role
+rules:
+  # Allow watching our CRD
+  - apiGroups: ["mycompany.com"]
+    resources: ["databases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Allow managing StatefulSets
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["*"]
+
+  # Allow managing Services
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["*"]
+
+  # Allow managing Secrets
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["*"]
+
+  # Allow managing CronJobs
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["*"]
+
+--- 
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: database-operator-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: database-operator-role
+subjects:
+  - kind: ServiceAccount
+    name: database-operator
+    namespace: my-operators

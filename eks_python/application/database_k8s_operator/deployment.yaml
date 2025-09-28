@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-operator
+  namespace: database-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database-operator
+  template:
+    metadata:
+      labels:
+        app: database-operator
+    spec:
+      serviceAccountName: database-operator   # 🔑 use our ServiceAccount
+      containers:
+        - name: operator
+          image: myregistry/database-operator:latest

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: example-operator
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: example-operator-role
+  namespace: default
+rules:
+- apiGroups: ["my.domain"]
+  resources: ["examples"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+- apiGroups: [""]                      # core
+  resources: ["configmaps"]
+  verbs: ["get", "list", "create", "update", "delete", "patch"]
+- apiGroups: ["coordination.k8s.io"]  # lease for leader election
+  resources: ["leases"]
+  verbs: ["get", "create", "update", "patch", "delete", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: example-operator-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: example-operator
+  namespace: default
+roleRef:
+  kind: Role
+  name: example-operator-role
+  apiGroup: rbac.authorization.k8s.io

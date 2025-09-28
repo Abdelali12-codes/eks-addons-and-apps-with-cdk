@@ -1,0 +1,7 @@
+apiVersion: my.domain/v1
+kind: Example
+metadata:
+  name: hello-example
+  namespace: default
+spec:
+  message: "Hello Ali! This is your first operator creating a ConfigMap 🎉"

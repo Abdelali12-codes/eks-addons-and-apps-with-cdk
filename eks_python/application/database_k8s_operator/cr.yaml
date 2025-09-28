@@ -1,0 +1,11 @@
+apiVersion: mycompany.com/v1alpha1
+kind: Database
+metadata:
+  name: my-postgres-db
+  annotations:
+    backup/enabled: "true"
+    backup/schedule: "0 2 * * *"   # every day at 2 AM
+spec:
+  engine: postgres
+  version: "15"
+  storage: "20Gi"
