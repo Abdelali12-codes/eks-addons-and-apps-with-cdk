@@ -39,28 +39,9 @@ class Opensearch(Resource):
         self.cfn_domain = es.CfnDomain(self, "CfnOpenSearchDomain",
                                   access_policies= iam.PolicyDocument(statements=[
                                       iam.PolicyStatement(
-                                        actions=["es:ESHttp*"],
-                                          effect=iam.Effect.ALLOW,
-                                          principals= [iam.ArnPrincipal(f"arn:{Stack.of(self).partition}:iam::{Stack.of(self).account}:role/getsecret-lambda-role")],
-                                          resources=[
-                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
-                                      ),
-                                      iam.PolicyStatement(
-                                         actions=["es:ESHttp*"],
-                                          effect=iam.Effect.ALLOW,
-                                          principals= [iam.ArnPrincipal(f"arn:{Stack.of(self).partition}:iam::{Stack.of(self).account}:role/fluent-bit-role")],
-                                          resources=[
-                                          f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
-                                      ),
-                                      iam.PolicyStatement(
                                           actions=["es:ESHttp*"],
                                           effect=iam.Effect.ALLOW,
                                           principals=[iam.AnyPrincipal()],
-                                          conditions= {
-                                              "IpAddress": {
-                                                  "aws:SourceIp": "105.157.60.7/32"
-                                              }
-                                          },
                                           resources=[
                                               f"arn:{Stack.of(self).partition}:es:{Stack.of(self).region}:{Stack.of(self).account}:domain/{opensearch['es_domain_name']}/*"]
                                       )

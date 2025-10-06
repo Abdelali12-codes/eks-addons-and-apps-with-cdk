@@ -2,6 +2,8 @@ from aws_cdk import (Resource, RemovalPolicy, CfnDynamicReference, Fn, Stack, Cf
 from jinja2 import Environment, FileSystemLoader
 import aws_cdk.aws_eks  as eks
 import aws_cdk.aws_secretsmanager as sm
+import json
+import yaml
 import aws_cdk.aws_s3 as s3
 from ..policies.main import AirflowServiceAccount
 import os
@@ -13,7 +15,30 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 class Airflow(Resource):
     def __init__(self, scope, id, cluster: eks.ICluster, secret: sm.ISecret,  **kwargs):
         super().__init__(scope, id)
+
+
+        self.airflowsecret = sm.Secret(self, "airflow-secret",
+                                      secret_name="airflow-secret",
+                                      generate_secret_string=sm.SecretStringGenerator(
+                                          secret_string_template=json.dumps({
+                                              "AIRFLOW_USERNAME": "airflow",
+                                              "AIRFLOW_FIRSTNAME": "airflow",
+                                              "AIRFLOW_LASTNAME": "airflow",
+                                              "AIRFLOW_EMAIL": "airflow@example.com"
+                                            }),
+                                          exclude_punctuation=False,
+                                          password_length=16,
+                                          generate_string_key="AIRFLOW_PASSWORD"
+                                      )
+                                      )
     
+        extraenvFrom = yaml.dump([
+            {
+                "secretRef": {
+                    "name": "airflow-secret"
+                }
+            }
+        ])
         airflownamespace = eks.KubernetesManifest(
                 self,
                 "airflownamespace",
@@ -26,7 +51,7 @@ class Airflow(Resource):
             )
         airflowloggingbucket = s3.Bucket(self, "airflowloggingbucket",
                       bucket_name="airflow-logging-bucket-24-09-2025",
-                      removal_policy= RemovalPolicy.RETAIN                
+                      removal_policy= RemovalPolicy.DESTROY              
                     )
         airflowsa = AirflowServiceAccount(self, cluster=cluster)
         airflowhelm = eks.HelmChart(self, "airflow-helm-chart",
@@ -69,13 +94,14 @@ class Airflow(Resource):
                                    "ingressClassName": "ingress-nginx"
                                }
                             },
-                            # {
-                            #     "webserverSecretKeySecretName": "",
-                            #     "jwtSecretName": ""
-                            # },
                             "createUserJob": {
                                 "useHelmHooks": False,
-                                "applyCustomEnv": False
+                                "applyCustomEnv": True,
+                                "args": [
+                                    "bash",
+                                    "-c",
+                                    "exec airflow users create -r Admin -u \"${AIRFLOW_USERNAME}\" -e \"${AIRFLOW_EMAIL}\" -f \"${AIRFLOW_FIRSTNAME}\" -l \"${AIRFLOW_LASTNAME}\" -p \"${AIRFLOW_PASSWORD}\""
+                                ]
                             },
                             "migrateDatabaseJob": {
                                 # "enabled": False,
@@ -86,6 +112,7 @@ class Airflow(Resource):
                               "metadataSecretName": "airflow-metadata-secret",
                               "resultBackendSecretName": "airflow-backendresult-secret"
                             },
+                            "extraEnvFrom": extraenvFrom,
                             "triggerer": {
                                 "persistence": {
                                     "enabled": False
@@ -132,6 +159,7 @@ class Airflow(Resource):
                                     "subPath": "tests/dags"
                                 }
                             },
+
                             "config": {
                                 "logging": {
                                     "remote_logging": True,
@@ -140,8 +168,16 @@ class Airflow(Resource):
                                     "remote_log_conn_id": "aws_conn",
                                     "delete_worker_pods": False,
                                     "encrypt_s3_logs": True
+                                },
+                                "metrics": {
+                                    "otel_on": True,
+                                    "otel_host": "otel.abdelalitraining.com",
+                                    "otel_port": 80,
+                                    "otel_prefix": "airflow",
+                                    "otel_interval_milliseconds": 30000,
+                                    "otel_ssl_active": False
                                 }
-                            }
+                            },
                       }
                       
                     )
@@ -221,7 +257,53 @@ class Airflow(Resource):
                 }
             ]
         )
+
+        airflowSecret = eks.KubernetesManifest(
+                self,
+                "airflowSecret",
+                cluster=cluster,
+                manifest=[{
+                    "apiVersion": "external-secrets.io/v1",
+                    "kind": "ExternalSecret",
+                    "metadata": {
+                        "name": "airflow-secret",
+                        "namespace": "airflow"
+                    },
+                    "spec": {
+                        "refreshInterval": "1h",
+                        "secretStoreRef": {
+                            "name": "aws-secrets-manager",
+                            "kind": "ClusterSecretStore"
+                        },
+                        "target": {
+                            "name": "airflow-secret",
+                            "template": {
+                                "type": "Opaque",
+                                "data": {
+                                    "AIRFLOW_USERNAME": "{{ .AIRFLOW_USERNAME }}",
+                                    "AIRFLOW_PASSWORD": "{{ .AIRFLOW_PASSWORD }}",
+                                    "AIRFLOW_FIRSTNAME": "{{ .AIRFLOW_FIRSTNAME }}",
+                                    "AIRFLOW_LASTNAME": "{{ .AIRFLOW_LASTNAME }}",
+                                    "AIRFLOW_EMAIL": "{{ .AIRFLOW_EMAIL }}"
+                               }
+                            }
+                        },
+                        "dataFrom": [
+                        {
+                            "extract": {
+                                "key": self.airflowsecret.secret_name
+                            }
+                        }
+                        ]
+                    }
+                }
+            ]
+        )
         airflowhelm.node.add_dependency(airflownamespace)
+        airflowhelm.node.add_dependency(self.airflowsecret)
+        airflowhelm.node.add_dependency(airflowSecret)
+        airflowSecret.node.add_dependency(self.airflowsecret)
+        airflowSecret.node.add_dependency(airflownamespace)
         airflowbackendresultSecret.node.add_dependency(airflowhelm)
         airflowbackendresultSecret.node.add_dependency(airflownamespace)
         airflowmetadataSecret.node.add_dependency(airflowhelm)

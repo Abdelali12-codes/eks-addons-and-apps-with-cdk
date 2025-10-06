@@ -54,4 +54,59 @@ class Opentelemetry(Resource):
             k8s_manifest.node.add_dependency(adotaddon)
             resources_dependency[f"opentelemetry-{manifest['kind'].lower()}"] = k8s_manifest
 
+        
+        otelingress = eks.KubernetesManifest(
+                self,
+                "otelingress",
+                cluster=cluster,
+                manifest=[{
+                    "apiVersion": "networking.k8s.io/v1",
+                    "kind": "Ingress",
+                    "metadata": {
+                        "name": "otel-ingress",
+                        "namespace": "aws-otel-eks",
+                        "annotations": {
+                        "cert-manager.io/cluster-issuer": "dns-01-production"
+                        }
+                    },
+                    "spec": {
+                        "ingressClassName": "ingress-nginx",
+                        "rules": [
+                        {
+                            "host": "otel.abdelalitraining.com",
+                            "http": {
+                            "paths": [
+                                {
+                                "pathType": "Prefix",
+                                "path": "/",
+                                "backend": {
+                                    "service": {
+                                    "name": "observability-collector",
+                                    "port": {
+                                        "number": 4318
+                                    }
+                                    }
+                                }
+                                }
+                            ]
+                            }
+                        }
+                        ],
+                        "tls": [
+                        {
+                            "hosts": [
+                            "otel.abdelalitraining.com"
+                            ],
+                            "secretName": "otel-abdelalitraining-com"
+                        }
+                        ]
+                    }
+                    }
+                ]
+            )
+        for i, manifest in enumerate(yaml_file):
+            otelingress.node.add_dependency(resources_dependency[f"opentelemetry-{manifest['kind'].lower()}"])
+        otelingress.node.add_dependency(adotrole)
+
         CfnOutput(self, "aps", value=managedprometheus.attr_prometheus_endpoint)
+

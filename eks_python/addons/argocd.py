@@ -23,10 +23,24 @@ class ArgocdApp(Resource):
         else:
             raise Exception("you should provide the cluster arg")
         
-        dexconf = ''
+        connectors = []
+        for key, val in dexapplications.items():
+            connector = {
+                "type": key,
+                "id": key,
+                "name": key.capitalize(),
+                "config": {
+                    "baseURL": "https://gitlab.com" if key.lower() == "gitlab" else "https://github.com",
+                    "clientID": val["clientid"],
+                    "clientSecret": val["clientsecret"],
+                    "redirectURI": "http://argocd-dex-server:5556/dex/callback"
+                }
+            }
+            connectors.append(connector)
 
-        for key in dexapplications.keys():
-            dexconf = dexconf + f"- type: {key}\n  id: {key}\n  name: {key.capitalize()}\n  config:\n    baseURL: {"https://gitlab.com" if key.lower() == 'gitlab' else 'https://github.com'}\n    clientID: {dexapplications[key]['clientid']}\n    clientSecret: {dexapplications[key]['clientsecret']}\n    redirectURI: http://argocd-dex-server:5556/dex/callback\n"
+        # Proper nesting instead of block scalar
+        dex_config_dict = {"connectors": connectors}
+        dex_config_yaml = yaml.dump(dex_config_dict, sort_keys=False, default_flow_style=False, indent=3)
         
         argohelm = eks.HelmChart(self, "argocdchart",
                       cluster= cluster,
@@ -40,22 +54,22 @@ class ArgocdApp(Resource):
                               "domain": argocd['hostname']
                           },
                           "server": {
-                           "ingress":{
-                               "enabled": "true",
-                               "ingressClassName": "ingress-nginx",
-                               "annotations": {
-                                   "cert-manager.io/cluster-issuer": "dns-01-production",
-                                   "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
-                               },
-                               "tls": "true",
-                               "hostname": argocd['hostname']
-                            }
+                            "ingress":{
+                                "enabled": "true",
+                                "ingressClassName": "ingress-nginx",
+                                "annotations": {
+                                    "cert-manager.io/cluster-issuer": "dns-01-production",
+                                    "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
+                                },
+                                "tls": "true",
+                                "hostname": argocd['hostname']
+                                }
                           },
                           "configs":{
-                              "cm":{
-                                  "dex.config": "connectors:\n"+dexconf
-                                }
+                              "cm": {
+                                  "dex.config": dex_config_yaml
                               }
+                            }
                           }
                       
                     )
@@ -70,7 +84,7 @@ class ArgocdApp(Resource):
                     "privatekey": privatekey
                 })
         
-        documents = yaml.load_all(rendered_template)
+        documents = yaml.load_all(rendered_template, Loader=yaml.FullLoader)
         for index, manifest in enumerate(documents):
             resource = cluster.add_manifest(manifest['kind'], manifest)
             resource.node.add_dependency(argohelm)

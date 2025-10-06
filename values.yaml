@@ -1,0 +1,97 @@
+USER-SUPPLIED VALUES:
+airflowLocalSettings: "\n                                {{- if semverCompare \">=2.2.0
+  <3.0.0\" .Values.airflowVersion }}\n                                {{- if not (or
+  .Values.webserverSecretKey .Values.webserverSecretKeySecretName) }}\n                                print(\"airflow\")\n
+  \                               {{- end }}\n                                {{-
+  end }}\n                                "
+airflowVersion: 2.11.0
+config:
+  logging:
+    delete_worker_pods: false
+    encrypt_s3_logs: true
+    logging_level: INFO
+    remote_base_log_folder: s3://airflow-logging-bucket-24-09-2025/airflow
+    remote_log_conn_id: aws_conn
+    remote_logging: true
+  metrics:
+    otel_host: otel.abdelalitraining.com
+    otel_interval_milliseconds: 30000
+    otel_on: true
+    otel_port: 80
+    otel_prefix: airflow
+    otel_ssl_active: false
+createUserJob:
+  applyCustomEnv: false
+  args:
+  - bash
+  - -c
+  - exec airflow users create "$@"
+  - --
+  - -r
+  - Admin
+  - -u
+  - $AIRFLOW_USERNAME
+  - -e
+  - $AIRFLOW_EMAIL
+  - -f
+  - $AIRFLOW_FIRSTNAME
+  - -l
+  - $AIRFLOW_LASTNAME
+  - -p
+  - $AIRFLOW_PASSWORD
+  useHelmHooks: false
+dags:
+  gitSync:
+    branch: master
+    depth: 1
+    enabled: true
+    ref: master
+    repo: https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git
+    rev: HEAD
+    subPath: tests/dags
+  persistence:
+    enabled: true
+    storageClassName: ebs-sc
+data:
+  metadataSecretName: airflow-metadata-secret
+  resultBackendSecretName: airflow-backendresult-secret
+defaultAirflowTag: 2.11.0
+extraEnvFrom: |
+  - secretRef:
+      name: airflow-secret
+ingress:
+  web:
+    annotations:
+      cert-manager.io/cluster-issuer: dns-01-production
+    enabled: true
+    hosts:
+    - name: airflow.abdelalitraining.com
+      tls:
+        enabled: true
+        secretName: airflow-abdelalitraining-com
+    ingressClassName: ingress-nginx
+migrateDatabaseJob:
+  applyCustomEnv: false
+  useHelmHooks: false
+postgresql:
+  enabled: false
+redis:
+  persistence:
+    storageClassName: ebs-sc
+triggerer:
+  persistence:
+    enabled: false
+webserver:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::080266302756:role/airflow-role
+    create: false
+    name: airflow-sa
+workers:
+  persistence:
+    enabled: false
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::080266302756:role/airflow-role
+    create: false
+    name: airflow-sa

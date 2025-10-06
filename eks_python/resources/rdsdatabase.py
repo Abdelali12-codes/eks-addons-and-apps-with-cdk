@@ -4,6 +4,7 @@ import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_secretsmanager as secret
 import aws_cdk.aws_ssm as ssm
 from ..configuration.config import rdsdb
+from .custom_resources_cdk.rds_lambda.rds_lambda import RdsLambda
 import json
 
 
@@ -86,8 +87,8 @@ class RdsDatabase(Resource):
                             string_value=rdsdb['database_name']
                         )
         
-        
-
+        rdslambda = RdsLambda(self, "rdslambdadatabase", vpc=vpc,secret=self.dbsecret)
+        rdslambda.node.add_dependency(db_rds)
 
 
         # database endpoint

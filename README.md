@@ -473,3 +473,17 @@ kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1" | jq .
 # fetching certain custom metrics of namespaced resources
 kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1/namespaces/default/my-external-metric" | jq .
 ```
+
+
+# lambda layer postgres client python
+
+```
+pip3 install --platform manylinux2014_x86_64 --target . --python-version 3.12 --only-binary=:all: psycopg2-binary
+```
+
+## openmetadata default authentication
+
+```
+Username - admin@open-metadata.org
+Password - admin
+```

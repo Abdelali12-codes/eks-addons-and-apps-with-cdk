@@ -2,7 +2,7 @@ from .eks_auth import *
 from .keda import *
 from .dashboard import Dashboard
 from .opentelemetry import Opentelemetry
-# from .argocd import *
+from .argocd import *
 from .nginx_ingress import *
 from .cert_manager import *
 from .external_dns import *

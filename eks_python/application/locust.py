@@ -126,3 +126,5 @@ class Locust(Resource):
                 ]
             )
         locustingress.node.add_dependency(locusthelm)
+        locustconfigmap.node.add_dependency(locustnamespace)
+        locusthelm.node.add_dependency(locustnamespace)

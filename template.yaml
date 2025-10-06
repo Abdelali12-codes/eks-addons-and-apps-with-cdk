@@ -1,0 +1,2611 @@
+---
+# Source: airflow/templates/jobs/create-user-job-serviceaccount.yaml
+###########################################
+## Airflow Create User Job ServiceAccount
+###########################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-create-user-job"
+  labels:
+    tier: airflow
+    component: create-user-job
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/jobs/migrate-database-job-serviceaccount.yaml
+#############################################
+## Airflow Migrate Database Job ServiceAccount
+##############################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-migrate-database-job"
+  labels:
+    tier: airflow
+    component: run-airflow-migrations
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/redis/redis-serviceaccount.yaml
+######################################
+## Airflow Redis ServiceAccount
+######################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-redis"
+  labels:
+    tier: airflow
+    component: redis
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/scheduler/scheduler-serviceaccount.yaml
+################################
+## Airflow Scheduler ServiceAccount
+#################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-scheduler"
+  labels:
+    tier: airflow
+    component: scheduler
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/statsd/statsd-serviceaccount.yaml
+######################################
+## Airflow StatsD ServiceAccount
+######################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-statsd"
+  labels:
+    tier: airflow
+    component: statsd
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/triggerer/triggerer-serviceaccount.yaml
+################################
+## Airflow Triggerer ServiceAccount
+#################################
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: "airflow-triggerer"
+  labels:
+    tier: airflow
+    component: triggerer
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+---
+# Source: airflow/templates/secrets/webserver-secret-key-secret.yaml
+############################################
+## Airflow Webserver Flask Secret Key Secret
+############################################
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-webserver-secret-key
+  labels:
+    tier: airflow
+    component: webserver
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+type: Opaque
+data:
+  webserver-secret-key: "RVJzeXZRWnQyTDNEbG5BUHA5MHJRVjRNcFBVQUZlYzA="
+---
+# Source: airflow/templates/configmaps/configmap.yaml
+################################
+## Airflow ConfigMap
+#################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-config
+  labels:
+    tier: airflow
+    component: config
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+data:
+  # These are system-specified config overrides.
+  airflow.cfg: |-
+    [celery]
+    flower_url_prefix = 
+    worker_concurrency = 16
+    
+    [celery_kubernetes_executor]
+    kubernetes_queue = kubernetes
+    
+    [core]
+    auth_manager = airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    colored_console_log = False
+    dags_folder = /opt/airflow/dags/repo/tests/dags
+    executor = CeleryExecutor
+    load_examples = False
+    remote_logging = False
+    
+    [elasticsearch]
+    json_format = True
+    log_id_template = {dag_id}_{task_id}_{execution_date}_{try_number}
+    
+    [elasticsearch_configs]
+    max_retries = 3
+    retry_timeout = True
+    timeout = 30
+    
+    [fab]
+    enable_proxy_fix = True
+    
+    [kerberos]
+    ccache = /var/kerberos-ccache/cache
+    keytab = /etc/airflow.keytab
+    principal = airflow@FOO.COM
+    reinit_frequency = 3600
+    
+    [kubernetes]
+    airflow_configmap = airflow-config
+    airflow_local_settings_configmap = airflow-config
+    multi_namespace_mode = False
+    namespace = default
+    pod_template_file = /opt/airflow/pod_templates/pod_template_file.yaml
+    worker_container_repository = apache/airflow
+    worker_container_tag = 2.11.0
+    
+    [kubernetes_executor]
+    multi_namespace_mode = False
+    namespace = default
+    pod_template_file = /opt/airflow/pod_templates/pod_template_file.yaml
+    worker_container_repository = apache/airflow
+    worker_container_tag = 2.11.0
+    
+    [logging]
+    colored_console_log = False
+    delete_worker_pods = false
+    encrypt_s3_logs = true
+    logging_level = INFO
+    remote_base_log_folder = s3://airflow-logging-bucket-24-09-2025/airflow
+    remote_log_conn_id = aws_conn
+    remote_logging = true
+    
+    [metrics]
+    otel_host = otel.abdelalitraining.com
+    otel_interval_milliseconds = 30000
+    otel_on = true
+    otel_port = 80
+    otel_prefix = airflow
+    otel_ssl_active = false
+    statsd_host = airflow-statsd
+    statsd_on = True
+    statsd_port = 9125
+    statsd_prefix = airflow
+    
+    [scheduler]
+    run_duration = 41460
+    standalone_dag_processor = False
+    statsd_host = airflow-statsd
+    statsd_on = True
+    statsd_port = 9125
+    statsd_prefix = airflow
+    
+    [webserver]
+    enable_proxy_fix = True
+    rbac = True
+    
+  airflow_local_settings.py: |-
+    
+                                    print("airflow")
+---
+# Source: airflow/templates/configmaps/statsd-configmap.yaml
+################################
+## Airflow StatsD ConfigMap
+#################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-statsd
+  labels:
+    tier: airflow
+    component: config
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+data:
+  mappings.yml: |-
+    # Licensed to the Apache Software Foundation (ASF) under one
+    # or more contributor license agreements.  See the NOTICE file
+    # distributed with this work for additional information
+    # regarding copyright ownership.  The ASF licenses this file
+    # to you under the Apache License, Version 2.0 (the
+    # "License"); you may not use this file except in compliance
+    # with the License.  You may obtain a copy of the License at
+    #
+    #   http://www.apache.org/licenses/LICENSE-2.0
+    #
+    # Unless required by applicable law or agreed to in writing,
+    # software distributed under the License is distributed on an
+    # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    # KIND, either express or implied.  See the License for the
+    # specific language governing permissions and limitations
+    # under the License.
+    ---
+    # 
+    mappings:
+      # Map dot separated stats to labels
+      - match: airflow.dagrun.dependency-check.*.*
+        name: "airflow_dagrun_dependency_check"
+        labels:
+          dag_id: "$1"
+    
+      - match: airflow.operator_successes_(.*)
+        match_type: regex
+        name: "airflow_operator_successes"
+        labels:
+          operator: "$1"
+    
+      - match: airflow.operator_failures_(.*)
+        match_type: regex
+        name: "airflow_operator_failures"
+        labels:
+          operator: "$1"
+    
+      - match: airflow.scheduler_heartbeat
+        match_type: regex
+        name: "airflow_scheduler_heartbeat"
+        labels:
+          type: counter
+    
+      - match: airflow.dag_processor_heartbeat
+        match_type: regex
+        name: "airflow_dag_processor_heartbeat"
+        labels:
+          type: counter
+    
+      - match: airflow.dag.*.*.duration
+        name: "airflow_task_duration"
+        labels:
+          dag_id: "$1"
+          task_id: "$2"
+    
+      - match: airflow.dagrun.duration.success.*
+        name: "airflow_dagrun_duration"
+        labels:
+          dag_id: "$1"
+    
+      - match: airflow.dagrun.duration.failed.*
+        name: "airflow_dagrun_failed"
+        labels:
+          dag_id: "$1"
+    
+      - match: airflow.dagrun.schedule_delay.*
+        name: "airflow_dagrun_schedule_delay"
+        labels:
+          dag_id: "$1"
+    
+      - match: airflow.dag_processing.last_runtime.*
+        name: "airflow_dag_processing_last_runtime"
+        labels:
+          dag_file: "$1"
+    
+      - match: airflow.dag_processing.last_run.seconds_ago.*
+        name: "airflow_dag_processing_last_run_seconds_ago"
+        labels:
+          dag_file: "$1"
+    
+      - match: airflow.pool.open_slots.*
+        name: "airflow_pool_open_slots"
+        labels:
+          pool: "$1"
+    
+      - match: airflow.pool.used_slots.*
+        name: "airflow_pool_used_slots"
+        labels:
+          pool: "$1"
+    
+      - match: airflow.pool.starving_tasks.*
+        name: "airflow_pool_starving_tasks"
+        labels:
+          pool: "$1"
+    
+      - match: airflow.executor.open_slots.*
+        name: "airflow_executor_open_slots"
+        labels:
+          executor: "$1"
+    
+      - match: airflow.executor.queued_tasks.*
+        name: "airflow_executor_queued_tasks"
+        labels:
+          executor: "$1"
+    
+      - match: airflow.executor.running_tasks.*
+        name: "airflow_executor_running_tasks"
+        labels:
+          executor: "$1"
+    
+      - match: airflow.ti.running.*.*.*
+        name: "airflow_ti_running"
+        labels:
+          queue: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+---
+# Source: airflow/templates/dags-persistent-volume-claim.yaml
+######################################
+## Airflow DAGs PersistentVolumeClaim
+######################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: airflow-dags
+  labels:
+    tier: airflow
+    component: dags-pvc
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: "1Gi"
+  storageClassName: "ebs-sc"
+---
+# Source: airflow/templates/rbac/pod-launcher-role.yaml
+################################
+## Airflow Pod Launcher Role
+#################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow-pod-launcher-role
+  namespace: "default"
+  labels:
+    tier: airflow
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+    verbs:
+      - "create"
+      - "list"
+      - "get"
+      - "patch"
+      - "watch"
+      - "delete"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods/log"
+    verbs:
+      - "get"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods/exec"
+    verbs:
+      - "create"
+      - "get"
+  - apiGroups:
+      - ""
+    resources:
+      - "events"
+    verbs:
+      - "list"
+---
+# Source: airflow/templates/rbac/pod-log-reader-role.yaml
+################################
+## Airflow Pod Reader Role
+#################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow-pod-log-reader-role
+  namespace: "default"
+  labels:
+    tier: airflow
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+    verbs:
+      - "list"
+      - "get"
+      - "watch"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods/log"
+    verbs:
+      - "get"
+      - "list"
+---
+# Source: airflow/templates/rbac/pod-launcher-rolebinding.yaml
+################################
+## Airflow Pod Launcher Role Binding
+#################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: "default"
+  name: airflow-pod-launcher-rolebinding
+  labels:
+    tier: airflow
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: airflow-pod-launcher-role
+subjects:
+  - kind: ServiceAccount
+    name: "airflow-sa"
+    namespace: "default"
+---
+# Source: airflow/templates/rbac/pod-log-reader-rolebinding.yaml
+################################
+## Airflow Pod Reader Role Binding
+#################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: "default"
+  name: airflow-pod-log-reader-rolebinding
+  labels:
+    tier: airflow
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: airflow-pod-log-reader-role
+subjects:
+  - kind: ServiceAccount
+    name: "airflow-sa"
+    namespace: "default"
+  - kind: ServiceAccount
+    name: "airflow-triggerer"
+    namespace: "default"
+---
+# Source: airflow/templates/redis/redis-service.yaml
+################################
+## Airflow Redis Service
+#################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-redis
+  labels:
+    tier: airflow
+    component: redis
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  type: ClusterIP
+  selector:
+    tier: airflow
+    component: redis
+    release: airflow
+  ports:
+    - name: redis-db
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+---
+# Source: airflow/templates/statsd/statsd-service.yaml
+################################
+## Airflow StatsD Service
+#################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-statsd
+  labels:
+    tier: airflow
+    component: statsd
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9102"
+spec:
+  type: ClusterIP
+  selector:
+    tier: airflow
+    component: statsd
+    release: airflow
+  ports:
+    - name: statsd-ingest
+      protocol: UDP
+      port: 9125
+      targetPort: 9125
+    - name: statsd-scrape
+      protocol: TCP
+      port: 9102
+      targetPort: 9102
+---
+# Source: airflow/templates/triggerer/triggerer-service.yaml
+################################
+## Airflow triggerer Service
+#################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-triggerer
+  labels:
+    tier: airflow
+    component: triggerer
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  clusterIP: None
+  selector:
+    tier: airflow
+    component: triggerer
+    release: airflow
+  ports:
+    - name: triggerer-logs
+      protocol: TCP
+      port: 8794
+      targetPort: 8794
+---
+# Source: airflow/templates/webserver/webserver-service.yaml
+################################
+## Airflow Webserver Service
+#################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-webserver
+  labels:
+    tier: airflow
+    component: webserver
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  type: ClusterIP
+  selector:
+    tier: airflow
+    component: webserver
+    release: airflow
+  ports:
+  
+    -
+      name: airflow-ui
+      port: 8080
+---
+# Source: airflow/templates/workers/worker-service.yaml
+################################
+## Airflow Worker Service
+#################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-worker
+  labels:
+    tier: airflow
+    component: worker
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  clusterIP: None
+  selector:
+    tier: airflow
+    component: worker
+    release: airflow
+  ports:
+    - name: worker-logs
+      protocol: TCP
+      port: 8793
+      targetPort: 8793
+---
+# Source: airflow/templates/scheduler/scheduler-deployment.yaml
+################################
+## Airflow Scheduler Deployment/StatefulSet
+#################################
+# Are we using a local executor?
+# Is persistence enabled on the _workers_?
+# This is important because in $local mode, the scheduler assumes the role of the worker
+# If we're using a StatefulSet
+# We can skip DAGs mounts on scheduler if dagProcessor is enabled, except with $local mode
+  
+# If we're using elasticsearch or opensearch logging
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  labels:
+    tier: airflow
+    component: scheduler
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+    executor: "CeleryExecutor"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow
+      component: scheduler
+      release: airflow
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: scheduler
+        release: airflow
+      annotations:
+        checksum/metadata-secret: b2fe937560e9635aeb01fce9100c2f836c5880f81c802565ce95fbcc8a56da4c
+        checksum/result-backend-secret: 98a68f230007cfa8f5d3792e1aff843a76b0686409e4a46ab2f092f6865a1b71
+        checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
+        checksum/airflow-config: 8be6c597c5e6e1a31b2698eb0c0fa8053a07580d66cd4cdbe82336f0a8f76cff
+        checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
+        checksum/extra-secrets: e9582fdd622296c976cbc10a5ba7d6702c28a24fe80795ea5b84ba443a56c827
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      nodeSelector:
+        {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: scheduler
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+      serviceAccountName: "airflow-scheduler"
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      initContainers:
+        - name: wait-for-airflow-migrations
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+          args:          
+            - airflow
+            - db
+            - check-migrations
+            - --migration-wait-timeout=60
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+        
+        - name: git-sync-init
+          image: registry.k8s.io/git-sync/git-sync:v4.3.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 65533
+          envFrom:  
+            []
+          env:
+            - name: GIT_SYNC_REV
+              value: "HEAD"
+            - name: GITSYNC_REF
+              value: "master"
+            - name: GIT_SYNC_BRANCH
+              value: "master"
+            - name: GIT_SYNC_REPO
+              value: "https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git"
+            - name: GITSYNC_REPO
+              value: "https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git"
+            - name: GIT_SYNC_DEPTH
+              value: "1"
+            - name: GITSYNC_DEPTH
+              value: "1"
+            - name: GIT_SYNC_ROOT
+              value: "/git"
+            - name: GITSYNC_ROOT
+              value: "/git"
+            - name: GIT_SYNC_DEST
+              value: "repo"
+            - name: GITSYNC_LINK
+              value: "repo"
+            - name: GIT_SYNC_ADD_USER
+              value: "true"
+            - name: GITSYNC_ADD_USER
+              value: "true"
+            - name: GITSYNC_PERIOD
+              value: "5s"
+            - name: GIT_SYNC_MAX_SYNC_FAILURES
+              value: "0"
+            - name: GITSYNC_MAX_FAILURES
+              value: "0"
+            - name: GIT_SYNC_ONE_TIME
+              value: "true"
+            - name: GITSYNC_ONE_TIME
+              value: "true"
+          resources: 
+            {}
+          volumeMounts:
+          - name: dags
+            mountPath: /git
+      containers:
+        # Always run the main scheduler container.
+        - name: scheduler
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args: 
+            - bash
+            - -c
+            - exec airflow scheduler
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection          
+          livenessProbe:
+            initialDelaySeconds: 10
+            timeoutSeconds: 20
+            failureThreshold: 5
+            periodSeconds: 60
+            exec:
+              command:              
+                - sh
+                - -c
+                - |
+                  CONNECTION_CHECK_MAX_COUNT=0 AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR exec /entrypoint \
+                  airflow jobs check --job-type SchedulerJob --local
+          startupProbe:
+            initialDelaySeconds: 0
+            timeoutSeconds: 20
+            failureThreshold: 6
+            periodSeconds: 10
+            exec:
+              command:              
+                - sh
+                - -c
+                - |
+                  CONNECTION_CHECK_MAX_COUNT=0 AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR exec /entrypoint \
+                  airflow jobs check --job-type SchedulerJob --local
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: /opt/airflow/pod_templates/pod_template_file.yaml
+              subPath: pod_template_file.yaml
+              readOnly: true
+            - name: logs
+              mountPath: "/opt/airflow/logs"
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+            - name: dags
+              mountPath: /opt/airflow/dags
+              readOnly: True        
+        - name: git-sync
+          image: registry.k8s.io/git-sync/git-sync:v4.3.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 65533
+          envFrom:  
+            []
+          env:
+            - name: GIT_SYNC_REV
+              value: "HEAD"
+            - name: GITSYNC_REF
+              value: "master"
+            - name: GIT_SYNC_BRANCH
+              value: "master"
+            - name: GIT_SYNC_REPO
+              value: "https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git"
+            - name: GITSYNC_REPO
+              value: "https://github.com/Abdelali12-codes/eks-addons-and-apps-with-cdk.git"
+            - name: GIT_SYNC_DEPTH
+              value: "1"
+            - name: GITSYNC_DEPTH
+              value: "1"
+            - name: GIT_SYNC_ROOT
+              value: "/git"
+            - name: GITSYNC_ROOT
+              value: "/git"
+            - name: GIT_SYNC_DEST
+              value: "repo"
+            - name: GITSYNC_LINK
+              value: "repo"
+            - name: GIT_SYNC_ADD_USER
+              value: "true"
+            - name: GITSYNC_ADD_USER
+              value: "true"
+            - name: GITSYNC_PERIOD
+              value: "5s"
+            - name: GIT_SYNC_MAX_SYNC_FAILURES
+              value: "0"
+            - name: GITSYNC_MAX_FAILURES
+              value: "0"
+          resources: 
+            {}
+          volumeMounts:
+          - name: dags
+            mountPath: /git
+        - name: scheduler-log-groomer
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args:
+            - bash
+            - /clean-logs
+          env:
+            - name: AIRFLOW__LOG_RETENTION_DAYS
+              value: "15"
+            - name: AIRFLOW__LOG_CLEANUP_FREQUENCY_MINUTES
+              value: "15"
+            - name: AIRFLOW_HOME
+              value: "/opt/airflow"
+          volumeMounts:
+            - name: logs
+              mountPath: "/opt/airflow/logs"
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+        - name: dags
+          persistentVolumeClaim:
+            claimName: airflow-dags
+        - name: logs
+          emptyDir:
+            {}
+---
+# Source: airflow/templates/statsd/statsd-deployment.yaml
+################################
+## Airflow StatsD Deployment
+#################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-statsd
+  labels:
+    tier: airflow
+    component: statsd
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow
+      component: statsd
+      release: airflow
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: statsd
+        release: airflow
+    spec:
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: "airflow-statsd"
+      securityContext: 
+        runAsUser: 65534
+      restartPolicy: Always
+      containers:
+        - name: statsd
+          image: quay.io/prometheus/statsd-exporter:v0.28.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args: 
+            - --statsd.mapping-config=/etc/statsd-exporter/mappings.yml
+          resources:
+            {}
+          ports:
+            - name: statsd-ingest
+              protocol: UDP
+              containerPort: 9125
+            - name: statsd-scrape
+              containerPort: 9102
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9102
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9102
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/statsd-exporter/mappings.yml
+              subPath: mappings.yml
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-statsd
+---
+# Source: airflow/templates/triggerer/triggerer-deployment.yaml
+################################
+## Airflow Triggerer Deployment
+#################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-triggerer
+  labels:
+    tier: airflow
+    component: triggerer
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow
+      component: triggerer
+      release: airflow
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: triggerer
+        release: airflow
+      annotations:
+        checksum/metadata-secret: b2fe937560e9635aeb01fce9100c2f836c5880f81c802565ce95fbcc8a56da4c
+        checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
+        checksum/airflow-config: 8be6c597c5e6e1a31b2698eb0c0fa8053a07580d66cd4cdbe82336f0a8f76cff
+        checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
+        checksum/extra-secrets: e9582fdd622296c976cbc10a5ba7d6702c28a24fe80795ea5b84ba443a56c827
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      nodeSelector:
+        {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: triggerer
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+      serviceAccountName: "airflow-triggerer"
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      initContainers:
+        - name: wait-for-airflow-migrations
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+          args:          
+            - airflow
+            - db
+            - check-migrations
+            - --migration-wait-timeout=60
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+      containers:
+        - name: triggerer
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args: 
+            - bash
+            - -c
+            - exec airflow triggerer
+          resources:
+            {}
+          volumeMounts:
+            - name: logs
+              mountPath: "/opt/airflow/logs"
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+            - name: dags
+              mountPath: /opt/airflow/dags
+              readOnly: True
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+          
+          livenessProbe:
+            initialDelaySeconds: 10
+            timeoutSeconds: 20
+            failureThreshold: 5
+            periodSeconds: 60
+            exec:
+              command:              
+                - sh
+                - -c
+                - |
+                  CONNECTION_CHECK_MAX_COUNT=0 AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR exec /entrypoint \
+                  airflow jobs check --job-type TriggererJob --local
+          ports:
+            - name: triggerer-logs
+              containerPort: 8794
+        - name: triggerer-log-groomer
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args:
+            - bash
+            - /clean-logs
+          env:
+            - name: AIRFLOW__LOG_RETENTION_DAYS
+              value: "15"
+            - name: AIRFLOW__LOG_CLEANUP_FREQUENCY_MINUTES
+              value: "15"
+            - name: AIRFLOW_HOME
+              value: "/opt/airflow"
+          volumeMounts:
+            - name: logs
+              mountPath: "/opt/airflow/logs"
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+        - name: dags
+          persistentVolumeClaim:
+            claimName: airflow-dags
+        - name: logs
+          emptyDir:
+            {}
+---
+# Source: airflow/templates/webserver/webserver-deployment.yaml
+################################
+## Airflow Webserver Deployment
+#################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  labels:
+    tier: airflow
+    component: webserver
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  replicas: 1
+  strategy:
+    # Here we define the rolling update strategy
+    # - maxSurge define how many pod we can add at a time
+    # - maxUnavailable define how many pod can be unavailable
+    #   during the rolling update
+    # Setting maxUnavailable to 0 would make sure we have the appropriate
+    # capacity during the rolling update.
+    # You can also use percentage based value instead of integer.
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      tier: airflow
+      component: webserver
+      release: airflow
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: webserver
+        release: airflow
+      annotations:
+        checksum/metadata-secret: b2fe937560e9635aeb01fce9100c2f836c5880f81c802565ce95fbcc8a56da4c
+        checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
+        checksum/webserver-secret-key: 749ff0036c82c2cdbadd782c00fc73dd40c793bfd481069c0830e45d47952f6f
+        checksum/airflow-config: 8be6c597c5e6e1a31b2698eb0c0fa8053a07580d66cd4cdbe82336f0a8f76cff
+        checksum/webserver-config: 2f3fdfd294a37094d2abee43b2b09888a5c195ee03414996bf99a4681658af94
+        checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
+        checksum/extra-secrets: e9582fdd622296c976cbc10a5ba7d6702c28a24fe80795ea5b84ba443a56c827
+    spec:
+      serviceAccountName: "airflow-sa"
+      nodeSelector:
+        {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: webserver
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      initContainers:
+        - name: wait-for-airflow-migrations
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+          args:          
+            - airflow
+            - db
+            - check-migrations
+            - --migration-wait-timeout=60
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+      containers:
+        - name: webserver
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args:
+            - bash
+            - -c
+            - exec airflow webserver
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: /opt/airflow/pod_templates/pod_template_file.yaml
+              subPath: pod_template_file.yaml
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+          ports:
+            - name: airflow-ui
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            timeoutSeconds: 20
+            failureThreshold: 6
+            periodSeconds: 10
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection          
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+---
+# Source: airflow/templates/workers/worker-deployment.yaml
+################################
+## Airflow Worker Deployment
+#################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-worker
+  labels:
+    tier: airflow
+    component: worker
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow
+      component: worker
+      release: airflow
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: worker
+        release: airflow
+      annotations:
+        checksum/metadata-secret: b2fe937560e9635aeb01fce9100c2f836c5880f81c802565ce95fbcc8a56da4c
+        checksum/result-backend-secret: 98a68f230007cfa8f5d3792e1aff843a76b0686409e4a46ab2f092f6865a1b71
+        checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
+        checksum/webserver-secret-key: 93db60076d0f19b2de657dd50e7c5a2128fcb97688ab07b774a007ada28e87c9
+        checksum/kerberos-keytab: 80979996aa3c1f48c95dfbe9bb27191e71f12442a08c0ed834413da9d430fd0e
+        checksum/airflow-config: 8be6c597c5e6e1a31b2698eb0c0fa8053a07580d66cd4cdbe82336f0a8f76cff
+        checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
+        checksum/extra-secrets: e9582fdd622296c976cbc10a5ba7d6702c28a24fe80795ea5b84ba443a56c827
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    spec:
+      nodeSelector:
+        {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: worker
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      terminationGracePeriodSeconds: 600
+      restartPolicy: Always
+      serviceAccountName: "airflow-sa"
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      initContainers:
+        - name: wait-for-airflow-migrations
+          resources:
+            {}
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+          args:          
+            - airflow
+            - db
+            - check-migrations
+            - --migration-wait-timeout=60
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+      containers:
+        - name: worker
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args: 
+            - bash
+            - -c
+            - |-
+              exec \
+              airflow celery worker
+          resources:
+            {}
+          livenessProbe:
+            initialDelaySeconds: 10
+            timeoutSeconds: 20
+            failureThreshold: 5
+            periodSeconds: 60
+            exec:
+              command:
+                - sh
+                - -c
+                - CONNECTION_CHECK_MAX_COUNT=0 exec /entrypoint python -m celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d celery@$(hostname)
+          ports:
+            - name: worker-logs
+              containerPort: 8793
+          volumeMounts:
+            - name: logs
+              mountPath: "/opt/airflow/logs"
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+            - name: dags
+              mountPath: /opt/airflow/dags
+              readOnly: True
+          envFrom:          
+            - secretRef:
+                name: airflow-secret
+            
+          env:
+            # Only signal the main process, not the process group, to make Warm Shutdown work properly
+            - name: DUMB_INIT_SETSID
+              value: "0"          
+            # Dynamically created environment variables
+            # Dynamically created secret envs
+            # Extra env          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection          
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+        - name: dags
+          persistentVolumeClaim:
+            claimName: airflow-dags
+        - name: logs
+          emptyDir:
+            {}
+---
+# Source: airflow/templates/redis/redis-statefulset.yaml
+################################
+## Airflow Redis StatefulSet
+#################################
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: airflow-redis
+  labels:
+    tier: airflow
+    component: redis
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  serviceName: airflow-redis
+  selector:
+    matchLabels:
+      tier: airflow
+      component: redis
+      release: airflow
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: redis
+        release: airflow
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      terminationGracePeriodSeconds: 600
+      serviceAccountName: "airflow-redis"
+      securityContext: 
+        runAsUser: 0
+      containers:
+        - name: redis
+          image: redis:7.2-bookworm
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command: ["/bin/sh"]
+          resources:
+            {}
+          args: ["-c", "redis-server --requirepass ${REDIS_PASSWORD}"]
+          ports:
+            - name: redis-db
+              containerPort: 6379
+          volumeMounts:
+            - name: redis-db
+              mountPath: /data
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-redis-password
+                  key: password
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: redis-db
+      spec:
+        storageClassName: "ebs-sc"
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+# Source: airflow/templates/jobs/create-user-job.yaml
+################################
+## Airflow Create User Job
+#################################
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-create-user
+  labels:
+    tier: airflow
+    component: create-user-job
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: create-user-job
+        release: airflow
+    spec:
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      restartPolicy: OnFailure
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      serviceAccountName: "airflow-create-user-job"
+      containers:
+        - name: create-user
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args: 
+            - bash
+            - -c
+            - exec airflow users create "$@"
+            - --
+            - -r
+            - Admin
+            - -u
+            - $AIRFLOW_USERNAME
+            - -e
+            - $AIRFLOW_EMAIL
+            - -f
+            - $AIRFLOW_FIRSTNAME
+            - -l
+            - $AIRFLOW_LASTNAME
+            - -p
+            - $AIRFLOW_PASSWORD
+          env:          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection          
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+---
+# Source: airflow/templates/jobs/migrate-database-job.yaml
+################################
+## Airflow Run Migrations
+#################################
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-run-airflow-migrations
+  labels:
+    tier: airflow
+    component: run-airflow-migrations
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: run-airflow-migrations
+        release: airflow
+    spec:
+      securityContext: 
+        runAsUser: 50000
+        fsGroup: 0
+      restartPolicy: OnFailure
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+      topologySpreadConstraints:
+        []
+      serviceAccountName: "airflow-migrate-database-job"
+      containers:
+        - name: run-airflow-migrations
+          image: apache/airflow:2.11.0
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args:
+            - bash
+            - -c
+            - |-
+              exec \
+              airflow db migrate
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"          
+            # Hard Coded Airflow Envs
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-fernet-key
+                  key: fernet-key
+            - name: AIRFLOW_HOME
+              value: /opt/airflow
+            # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW_CONN_AIRFLOW_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-metadata-secret
+                  key: connection
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-webserver-secret-key
+                  key: webserver-secret-key
+            # (Airflow 1.10.* variant)
+            - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-backendresult-secret
+                  key: connection
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-broker-url
+                  key: connection
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/airflow/airflow.cfg"
+              subPath: airflow.cfg
+              readOnly: true
+            - name: config
+              mountPath: "/opt/airflow/config/airflow_local_settings.py"
+              subPath: airflow_local_settings.py
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: airflow-config
+---
+# Source: airflow/templates/webserver/webserver-ingress.yaml
+################################
+## Airflow Webserver Ingress
+#################################
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: airflow-ingress
+  labels:
+    tier: airflow
+    component: airflow-ingress
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+  annotations:
+    cert-manager.io/cluster-issuer: dns-01-production
+spec:
+  tls:
+    - hosts:
+        - "airflow.abdelalitraining.com"
+      secretName: airflow-abdelalitraining-com
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: airflow-webserver
+                port:
+                  name: airflow-ui
+            path: /
+            pathType: ImplementationSpecific
+      host: "airflow.abdelalitraining.com"
+  ingressClassName: ingress-nginx
+---
+# Source: airflow/templates/api-server/api-server-deployment.yaml
+################################
+## Airflow API Server Deployment
+#################################
+---
+# Source: airflow/templates/api-server/api-server-ingress.yaml
+################################
+## Airflow API Server Ingress
+#################################
+---
+# Source: airflow/templates/api-server/api-server-networkpolicy.yaml
+################################
+## Airflow API Server NetworkPolicy
+#################################
+---
+# Source: airflow/templates/api-server/api-server-poddisruptionbudget.yaml
+################################
+## Airflow API Server PodDisruptionBudget
+#################################
+---
+# Source: airflow/templates/api-server/api-server-service.yaml
+################################
+## Airflow API Server Service
+#################################
+---
+# Source: airflow/templates/api-server/api-server-serviceaccount.yaml
+######################################
+## Airflow API Server ServiceAccount
+######################################
+---
+# Source: airflow/templates/cleanup/cleanup-cronjob.yaml
+################################
+## Airflow Cleanup Pods CronJob
+#################################
+---
+# Source: airflow/templates/cleanup/cleanup-serviceaccount.yaml
+################################
+## Airflow Cleanup ServiceAccount
+#################################
+---
+# Source: airflow/templates/configmaps/api-server-configmap.yaml
+################################
+## Airflow ConfigMap
+#################################
+---
+# Source: airflow/templates/configmaps/extra-configmaps.yaml
+####################################################
+## Extra ConfigMaps provisioned via the chart values
+####################################################
+---
+# Source: airflow/templates/configmaps/webserver-configmap.yaml
+################################
+## Airflow ConfigMap
+#################################
+---
+# Source: airflow/templates/dag-processor/dag-processor-deployment.yaml
+################################
+## Airflow Dag Processor Deployment
+#################################
+---
+# Source: airflow/templates/dag-processor/dag-processor-serviceaccount.yaml
+################################
+## Airflow Dag Processor ServiceAccount
+#################################
+---
+# Source: airflow/templates/flower/flower-deployment.yaml
+################################
+## Airflow Flower Deployment
+#################################
+---
+# Source: airflow/templates/flower/flower-ingress.yaml
+################################
+## Airflow Flower Ingress
+#################################
+---
+# Source: airflow/templates/flower/flower-networkpolicy.yaml
+################################
+## Airflow Flower NetworkPolicy
+#################################
+---
+# Source: airflow/templates/flower/flower-service.yaml
+################################
+## Airflow Flower Service Component
+#################################
+---
+# Source: airflow/templates/flower/flower-serviceaccount.yaml
+######################################
+## Airflow Flower ServiceAccount
+######################################
+---
+# Source: airflow/templates/limitrange.yaml
+################################
+## Airflow Namespace LimitRange
+#################################
+---
+# Source: airflow/templates/logs-persistent-volume-claim.yaml
+######################################
+## Airflow LOGs PersistentVolumeClaim
+######################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-deployment.yaml
+################################
+## Airflow Pgbouncer Deployment
+#################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-ingress.yaml
+################################
+## Airflow Pgbouncer Ingress
+#################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-networkpolicy.yaml
+################################
+## Pgbouncer NetworkPolicy
+#################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-poddisruptionbudget.yaml
+################################
+## Pgbouncer PodDisruptionBudget
+#################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-service.yaml
+################################
+## Airflow Pgbouncer Service
+#################################
+---
+# Source: airflow/templates/pgbouncer/pgbouncer-serviceaccount.yaml
+######################################
+## Airflow Pgbouncer ServiceAccount
+######################################
+---
+# Source: airflow/templates/priorityclasses/priority-classes.yaml
+#################################################
+## Priority classes provisioned via the chart values
+#################################################
+---
+# Source: airflow/templates/rbac/pod-cleanup-role.yaml
+################################
+## Airflow Cleanup Role
+#################################
+---
+# Source: airflow/templates/rbac/pod-cleanup-rolebinding.yaml
+################################
+## Airflow Cleanup Role Binding
+#################################
+---
+# Source: airflow/templates/rbac/security-context-constraint-rolebinding.yaml
+################################
+## Airflow SCC Role Binding
+#################################
+---
+# Source: airflow/templates/redis/redis-networkpolicy.yaml
+################################
+## Airflow Redis NetworkPolicy
+#################################
+---
+# Source: airflow/templates/resourcequota.yaml
+################################
+## Airflow Namespace ResourceQuota
+#################################
+---
+# Source: airflow/templates/scheduler/scheduler-networkpolicy.yaml
+################################
+## Airflow Scheduler NetworkPolicy
+#################################
+---
+# Source: airflow/templates/scheduler/scheduler-poddisruptionbudget.yaml
+################################
+## Airflow Scheduler PodDisruptionBudget
+#################################
+---
+# Source: airflow/templates/scheduler/scheduler-service.yaml
+################################
+## Airflow Scheduler Service
+#################################
+---
+# Source: airflow/templates/secrets/api-secret-key-secret.yaml
+############################################
+## Airflow Api Flask Secret Key Secret
+############################################
+---
+# Source: airflow/templates/secrets/elasticsearch-secret.yaml
+################################
+## Elasticsearch Secret
+#################################
+---
+# Source: airflow/templates/secrets/extra-secrets.yaml
+#################################################
+## Extra Secrets provisioned via the chart values
+#################################################
+---
+# Source: airflow/templates/secrets/flower-secret.yaml
+################################
+## Flower Secret
+#################################
+---
+# Source: airflow/templates/secrets/jwt-secret.yaml
+############################################
+## Airflow JWT Secret
+############################################
+---
+# Source: airflow/templates/secrets/kerberos-keytab-secret.yaml
+################################
+## Kerberos Secret
+#################################
+---
+# Source: airflow/templates/secrets/metadata-connection-secret.yaml
+################################
+## Airflow Metadata Secret
+#################################
+---
+# Source: airflow/templates/secrets/opensearch-secret.yaml
+################################
+## OpenSearch Secret
+#################################
+---
+# Source: airflow/templates/secrets/pgbouncer-certificates-secret.yaml
+################################
+## Pgbouncer Certificate Secret
+#################################
+---
+# Source: airflow/templates/secrets/pgbouncer-config-secret.yaml
+################################
+## Pgbouncer Config Secret
+#################################
+---
+# Source: airflow/templates/secrets/pgbouncer-stats-secret.yaml
+################################
+## Pgbouncer Stats Secret
+#################################
+---
+# Source: airflow/templates/secrets/registry-secret.yaml
+################################
+## Registry Secret
+#################################
+---
+# Source: airflow/templates/secrets/result-backend-connection-secret.yaml
+################################
+## Airflow Result Backend Secret
+#################################
+---
+# Source: airflow/templates/statsd/statsd-ingress.yaml
+################################
+## Airflow Statsd Ingress
+#################################
+---
+# Source: airflow/templates/statsd/statsd-networkpolicy.yaml
+################################
+## Airflow StatsD NetworkPolicy
+#################################
+---
+# Source: airflow/templates/triggerer/triggerer-kedaautoscaler.yaml
+################################
+## Airflow Triggerer KEDA Scaler
+#################################
+---
+# Source: airflow/templates/triggerer/triggerer-networkpolicy.yaml
+##################################
+## Airflow triggerer NetworkPolicy
+##################################
+---
+# Source: airflow/templates/webserver/webserver-hpa.yaml
+################################
+## Airflow Webserver HPA
+#################################
+---
+# Source: airflow/templates/webserver/webserver-networkpolicy.yaml
+################################
+## Airflow Webserver NetworkPolicy
+#################################
+---
+# Source: airflow/templates/webserver/webserver-poddisruptionbudget.yaml
+################################
+## Airflow Webserver PodDisruptionBudget
+#################################
+---
+# Source: airflow/templates/webserver/webserver-serviceaccount.yaml
+######################################
+## Airflow Webserver ServiceAccount
+######################################
+---
+# Source: airflow/templates/workers/worker-hpa.yaml
+################################
+## Airflow Worker HPA
+#################################
+---
+# Source: airflow/templates/workers/worker-kedaautoscaler.yaml
+################################
+## Airflow Worker KEDA Scaler
+#################################
+---
+# Source: airflow/templates/workers/worker-networkpolicy.yaml
+################################
+## Airflow Worker NetworkPolicy
+#################################
+---
+# Source: airflow/templates/workers/worker-serviceaccount.yaml
+################################
+## Airflow Worker ServiceAccount
+#################################
+---
+# Source: airflow/templates/secrets/fernetkey-secret.yaml
+################################
+## Airflow Fernet Key Secret
+#################################
+# Fernet key value must be b64enc
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-fernet-key
+  labels:
+    tier: airflow
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+    "helm.sh/hook-weight": "0"
+type: Opaque
+data:
+  fernet-key: "V1hWdVZUbHhZbE5oU0c4elZtOWlVV2RHWkRSVlNuZE1iVEJUZDJSdmFIQT0="
+---
+# Source: airflow/templates/secrets/redis-secrets.yaml
+# We will create these secrets (if necessary) _even if_ we aren't
+# currently using CeleryExecutor or CeleryKubernetesExecutor. As we are
+# relying on the "pre-install" hack to prevent changing randomly generated passwords,
+# updating the executor later doesn't give us the opportunity to deploy them
+# when we need them. We will always deploy them defensively to make the executor
+# update path actually work.
+
+################################
+## Airflow Redis Password Secret
+#################################
+# If passwordSecretName is not set, we will either use the set password, or use the generated one
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-redis-password
+  labels:
+    tier: airflow
+    component: redis
+    release: airflow
+    chart: "airflow-1.18.0"
+    heritage: Helm
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+    "helm.sh/hook-weight": "0"
+type: Opaque
+data:
+  password: "dm5YVFI4VkpscA=="
+---
+# Source: airflow/templates/secrets/redis-secrets.yaml
+##################################
+## Airflow Redis Connection Secret
+##################################
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-broker-url
+  labels:
+    tier: airflow
+    component: redis
+    release: airflow
+    chart: airflow
+    heritage: Helm
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+    "helm.sh/hook-weight": "0"
+type: Opaque
+data:
+  connection: "cmVkaXM6Ly86dm5YVFI4VkpscEBhaXJmbG93LXJlZGlzOjYzNzkvMA=="

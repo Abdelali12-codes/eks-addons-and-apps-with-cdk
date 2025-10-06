@@ -20,7 +20,8 @@ from .addons  import (
     ExternalDns, 
     EbsDriver, 
     EfsDriver,
-    ExternalSecret
+    ExternalSecret,
+    ArgocdApp
 )
 from  .configuration.config import opensearch
 
@@ -67,16 +68,20 @@ class EksPythonStack(Stack):
         # rds 
         rdsdb = RdsDatabase(self, "rdsdb", vpc=vpc.vpc)
 
+        # Opensearch
+        opensearch = Opensearch(self, "Opensearch", cluster=cluster, vpc=vpc)
+
         # Airflow
         airflow = Airflow(self, 'Airflow', cluster=cluster, secret= rdsdb.dbsecret)
+
+        # openmetadata
+        openmetadata = Openmetadata(self, "openmetadata", cluster=cluster, db=rdsdb, elasticsearch=opensearch, airflow=airflow)
+        
         # Keda
         # Keda(self, 'keda', cluster=cluster)
 
         # Dashboard
         # Dashboard(self, 'dashboard', cluster=cluster)
-
-        # Opensearch
-        #opensearch = Opensearch(self, "Opensearch", cluster=cluster, vpc=vpc)
 
         # FluentBit
         #fluentbit = FluentBit(self, 'flutterbit', cluster=cluster,
@@ -99,9 +104,10 @@ class EksPythonStack(Stack):
         locust = Locust(self, "locust", cluster=cluster)        
         locust.node.add_dependency(ingress)
         locust.node.add_dependency(certmanger)
+
         # opentelemetry
-        # otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
-        # otel.node.add_dependency(certmanger)
+        otel = Opentelemetry(self, 'opentelemetry', cluster=cluster)
+        otel.node.add_dependency(certmanger)
 
         # karpenter
         #EksKarpenter(self, "ekskarpenter", cluster=cluster, namespace="karpenter")
@@ -112,8 +118,9 @@ class EksPythonStack(Stack):
         # # s3 driver
         # S3DriverMount(self, "s3driver", cluster=cluster)
 
-        # # argocd
-        # # ArgocdApp(self, "argocdapp", cluster=cluster)
+        # argocd
+        argocd = ArgocdApp(self, "argocdapp", cluster=cluster)
+        argocd.node.add_dependency(ingress)
 
         # external dns
         ExternalDns(self, "externaldns", cluster=cluster)

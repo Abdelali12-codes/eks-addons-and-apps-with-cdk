@@ -16,6 +16,7 @@ class Vpc(Resource):
                       ip_addresses=ec2.IpAddresses.cidr(vpc['vpccidr']),
                       enable_dns_hostnames= True,
                       enable_dns_support=True,
+                      nat_gateways=1,
                       max_azs=vpc['max_azs'],
                       subnet_configuration=vpc['subnet_configuration'],
             )

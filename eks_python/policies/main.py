@@ -484,7 +484,7 @@ def AdotServiceAccount(self, cluster, namespacename, serviceaccountname)-> iam.I
         }]
     )
 
-    eks.ServiceAccount(self, 'aws-otel-collector-sa',
+    otelsa = eks.ServiceAccount(self, 'aws-otel-collector-sa',
                                   cluster=cluster,
                                   name=serviceaccountname,
                                   labels={
@@ -495,7 +495,8 @@ def AdotServiceAccount(self, cluster, namespacename, serviceaccountname)-> iam.I
                                   },
                                   namespace=namespacename
                                   )
-
+       
+    otelsa.node.add_dependency(namespace)
     return role
     #servicea = eks.ServiceAccount(self, 'adot-collector-sa',
     #                   cluster=cluster,
