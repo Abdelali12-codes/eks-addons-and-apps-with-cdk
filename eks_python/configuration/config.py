@@ -3,8 +3,8 @@ import aws_cdk.aws_opensearchservice as es
 import aws_cdk.aws_route53 as route53
 import aws_cdk.aws_dynamodb as dynamodb
 
-REGION = "us-east-2"
-ACCOUNT = "080266302756"
+REGION = "us-east-1"
+ACCOUNT = "123456789012"  # Replace with your AWS account ID
 
 vpc  = {
     "vpccidr": "12.10.0.0/16",
@@ -19,6 +19,11 @@ vpc  = {
             subnet_type= ec2.SubnetType.PRIVATE_ISOLATED,
             cidr_mask=24
         ),
+        ec2.SubnetConfiguration( 
+            name="private-subnet",
+            subnet_type= ec2.SubnetType.PRIVATE_WITH_EGRESS,
+            cidr_mask=24
+        )
     ],
     "max_azs": 2,
  }
@@ -34,30 +39,30 @@ rdsdb = {
 }
 
 argocd = {
-    "hostname": "argocd.abdelalitraining.com",
-    "manifestrepo": "git@github.com:Abdelali12-codes/flask-app-k8s-manifests-gitops.git"
+    "hostname": "argocd.example.com",  # Replace with your domain
+    "manifestrepo": "git@github.com:your-org/your-manifests-repo.git"  # Replace with your repo
 }
 dexapplications = {
     "github":{
-      "clientid": "xxxxxxxxxxxxxxxxxx",
-      "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxx"
+      "clientid": "<GITHUB_CLIENT_ID>",  # Replace with your GitHub OAuth client ID
+      "clientsecret": "<GITHUB_CLIENT_SECRET>"  # Replace with your GitHub OAuth client secret
     },
-    "gitlab": {
-      "clientid": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    }
+    # "gitlab": {
+    #   "clientid": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    #   "clientsecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    # }
 }
 
 clusterissuer = {
-    "email": "jadelmoulaa2@gmail.com", # change it to yours
-    "hostedZoneName": "abdelalitraining.com", # change it to yours
-    "hostedZoneID": "Z05045244G4M5OFGHB4C", # change it to yours
+    "email": "admin@example.com",  # Replace with your email
+    "hostedZoneName": "example.com",  # Replace with your domain
+    "hostedZoneID": "Z0123456789ABCDEFGHIJ",  # Replace with your Route53 hosted zone ID
 }
 
 opensearch = {
-    "es_domain_name": "microservice-application",
+    "es_domain_name": "airflow-application",
     "secretname": "escredential",  # secret that you store your es password
-    "es_username": "esmicroservice",
+    "es_username": "airflow",
     "capacity": {
         "data_nodes": 2,
         "data_node_instance_type": "t3.small.search"
@@ -65,7 +70,7 @@ opensearch = {
     "version": "OpenSearch_2.9",
     "ebs": es.CfnDomain.EBSOptionsProperty(
         ebs_enabled=True,
-        volume_size=100,
+        volume_size=80,
         volume_type="gp2"
     )
 }

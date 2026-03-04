@@ -1,11 +1,57 @@
-*.swp
-package-lock.json
-__pycache__
-.pytest_cache
-.venv
-*.egg-info
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# CDK
+.cdk.staging/
+cdk.out/
+cdk.context.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Secrets
+*.pem
+*.key
+.env
+.env.local
+
+# Database
 psycopg2*
+*.db
+*.sqlite
+
+# OS
+Thumbs.db

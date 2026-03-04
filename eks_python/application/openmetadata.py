@@ -39,7 +39,7 @@ class Openmetadata(Resource):
                                 "config": {
                                     "elasticsearch": {
                                         "host": elasticsearch.domain_endpoint,
-                                        "searchType": "elasticsearch",
+                                        "searchType": "opensearch",
                                         "port": 443,
                                         "scheme": "https",
                                         "auth": {

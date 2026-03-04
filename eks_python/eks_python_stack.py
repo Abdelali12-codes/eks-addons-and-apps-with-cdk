@@ -39,7 +39,7 @@ class EksPythonStack(Stack):
               cluster_name="eks-cluster",
               vpc=vpc.vpc,
               vpc_subnets=[ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC)],
-              version=eks.KubernetesVersion.V1_32,
+              version=eks.KubernetesVersion.V1_31,
               role=master_role,
               default_capacity=0,
               kubectl_layer=KubectlV27Layer(self, "layer")
@@ -53,6 +53,28 @@ class EksPythonStack(Stack):
             node_role= node_role,
             subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             instance_types= [ec2.InstanceType.of(ec2.InstanceClass.M6G, ec2.InstanceSize.XLARGE)]
+        )
+
+        # elasticsearch master nodes
+
+        # elasticsearch hot nodes
+        cluster.add_nodegroup_capacity("elasticsearchhotnode", 
+            min_size=1,
+            desired_size=2,
+            max_size=4,
+            node_role= node_role,
+            subnets= ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            instance_types= [ec2.InstanceType.of(ec2.InstanceClass.R5, ec2.InstanceSize.LARGE)],
+            labels = {
+
+            },
+            taints = [
+               eks.TaintSpec(
+                   effect = eks.TaintEffect.NO_SCHEDULE,
+                   key = "",
+                   value = ""
+               )
+            ]
         )
         # client Vpn
         # ClientVpn(self, "clientVpn", vpc_instance=vpc.vpc)
